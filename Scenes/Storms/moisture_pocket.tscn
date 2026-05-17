@@ -1,0 +1,45 @@
+[gd_scene load_steps=5 format=3 uid="uid://storm_moisture_pocket"]
+
+[ext_resource type="Script" path="res://Scripts/Player/moisture_pocket_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://Scripts/Storm/moisture_pocket_stats.gd" id="2_stats"]
+[ext_resource type="Script" path="res://Scripts/Player/moisture_pocket_visuals.gd" id="3_visuals"]
+[ext_resource type="Script" path="res://Scripts/Utilities/camera_controller.gd" id="4_camera"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 22.0
+
+[node name="MoisturePocket" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_controller")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("2_stats")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+script = ExtResource("3_visuals")
+
+[node name="Core" type="Polygon2D" parent="VisualRoot"]
+color = Color(0.55, 0.78, 0.98, 0.85)
+polygon = PackedVector2Array(-20, 0, -14, -14, 0, -20, 14, -14, 20, 0, 14, 14, 0, 20, -14, 14)
+
+[node name="MistParticles" type="CPUParticles2D" parent="VisualRoot"]
+amount = 12
+lifetime = 1.4
+emission_shape = 1
+emission_sphere_radius = 18.0
+direction = Vector2(0, -1)
+spread = 120.0
+gravity = Vector2(0, -12)
+initial_velocity_min = 8.0
+initial_velocity_max = 22.0
+scale_amount_min = 0.4
+scale_amount_max = 1.0
+color = Color(0.7, 0.85, 1, 0.35)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+script = ExtResource("4_camera")

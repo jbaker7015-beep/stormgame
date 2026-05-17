@@ -1,0 +1,64 @@
+[gd_scene load_steps=2 format=3 uid="uid://storm_prototype_hud"]
+
+[ext_resource type="Script" path="res://Scripts/UI/prototype_hud.gd" id="1_hud"]
+
+[node name="PrototypeHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 360.0
+offset_bottom = 200.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "StormGame — Prototype 1"
+
+[node name="HumidityLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Humidity"
+
+[node name="HumidityBar" type="ProgressBar" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="HeatLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Heat"
+
+[node name="HeatBar" type="ProgressBar" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="EnergyLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Storm Energy"
+
+[node name="EnergyBar" type="ProgressBar" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="HintLabel" type="Label" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "WASD to move. Scroll wheel to zoom."

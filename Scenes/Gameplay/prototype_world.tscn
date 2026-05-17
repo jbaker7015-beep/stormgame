@@ -1,0 +1,75 @@
+[gd_scene load_steps=4 format=3 uid="uid://storm_prototype_world"]
+
+[ext_resource type="PackedScene" uid="uid://storm_moisture_pocket" path="res://Scenes/Storms/moisture_pocket.tscn" id="1_pocket"]
+[ext_resource type="PackedScene" uid="uid://storm_atmospheric_zone" path="res://Scenes/World/atmospheric_zone.tscn" id="2_zone"]
+[ext_resource type="PackedScene" uid="uid://storm_prototype_hud" path="res://Scenes/UI/prototype_hud.tscn" id="3_hud"]
+
+[node name="PrototypeWorld" type="Node2D"]
+
+[node name="SkyLayer" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Sky" type="ColorRect" parent="SkyLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.45, 0.62, 0.82, 1)
+
+[node name="GroundTint" type="ColorRect" parent="SkyLayer"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -180.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.32, 0.48, 0.35, 0.55)
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="AmbientMist" type="CPUParticles2D" parent="World"]
+position = Vector2(640, 360)
+amount = 40
+lifetime = 4.0
+preprocess = 2.0
+emission_shape = 3
+emission_rect_extents = Vector2(700, 400)
+direction = Vector2(0.2, -0.4)
+spread = 40.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 6.0
+initial_velocity_max = 18.0
+scale_amount_min = 0.5
+scale_amount_max = 1.2
+color = Color(0.85, 0.92, 1, 0.12)
+
+[node name="HumidityZoneLake" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(320, 280)
+zone_type = 0
+zone_radius = 140.0
+
+[node name="HumidityZoneRiver" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(900, 420)
+zone_type = 0
+zone_radius = 100.0
+
+[node name="HeatZoneSun" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(720, 200)
+zone_type = 1
+zone_radius = 130.0
+
+[node name="HeatZoneCity" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(480, 480)
+zone_type = 1
+zone_radius = 110.0
+
+[node name="MoisturePocket" parent="World" instance=ExtResource("1_pocket")]
+position = Vector2(640, 360)
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+
+[node name="PrototypeHUD" parent="HUDLayer" instance=ExtResource("3_hud")]
