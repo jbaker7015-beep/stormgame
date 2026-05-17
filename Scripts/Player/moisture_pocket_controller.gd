@@ -27,7 +27,20 @@ func _physics_process(delta: float) -> void:
 			PrototypeBalance.MOVE_FRICTION * delta
 		)
 
+	# Phase 3: wind drift pushes the pocket even without player input.
+	var wind: Vector2 = _get_wind_vector()
+	if wind.length_squared() > 0.01:
+		velocity += wind * delta
+
 	move_and_slide()
+
+
+func _get_wind_vector() -> Vector2:
+	var weather_nodes := get_tree().get_nodes_in_group("storm_weather")
+	for node in weather_nodes:
+		if node.has_method("get_wind_vector"):
+			return node.get_wind_vector()
+	return Vector2.ZERO
 
 
 func _read_movement_input() -> Vector2:

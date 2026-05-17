@@ -73,7 +73,14 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 	var in_heat: bool = stats != null and stats.is_in_heat_zone()
 
 	if energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
-		_hint_label.text = "Updraft forming — overlap humid and hot biomes!"
+		_hint_label.text = "Severe storm — rain, wind, and lightning active!"
+	elif (
+		instability >= PrototypeBalance.LIGHTNING_MIN_INSTABILITY
+		and energy >= PrototypeBalance.LIGHTNING_MIN_ENERGY
+	):
+		_hint_label.text = "Charged atmosphere — watch for lightning and wind drift."
+	elif humidity >= PrototypeBalance.RAIN_MIN_HUMIDITY and energy >= PrototypeBalance.RAIN_MIN_ENERGY:
+		_hint_label.text = "Rain forming — humidity and energy are high enough."
 	elif in_humid and in_heat:
 		_hint_label.text = "Synthesizing energy — stay in overlapping humid + heat zones."
 	elif in_humid or in_heat:

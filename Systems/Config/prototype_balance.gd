@@ -37,6 +37,7 @@ const UPDRAFT_INSTABILITY: float = 40.0
 # Slow decay when not collecting from biome zones
 const HUMIDITY_DECAY_RATE: float = 4.0
 const HEAT_DECAY_RATE: float = 3.0
+const STORM_ENERGY_DECAY_RATE: float = 2.5
 
 # Visual scale driven by energy + a touch of instability
 const MIN_VISUAL_SCALE: float = 0.45
@@ -47,3 +48,24 @@ const HALO_SCALE_MULTIPLIER: float = 1.35
 const CAMERA_ZOOM_MIN: float = 0.55
 const CAMERA_ZOOM_MAX: float = 1.35
 const CAMERA_ZOOM_STEP: float = 0.08
+
+# --- Prototype Phase 3: weather effects ---
+
+# Rain intensity scales with humidity and storm energy
+const RAIN_MIN_HUMIDITY: float = 20.0
+const RAIN_MIN_ENERGY: float = 15.0
+const RAIN_PARTICLES_MIN: int = 0
+const RAIN_PARTICLES_MAX: int = 72
+
+# Wind drift applied to the moisture pocket (pixels / second)
+const WIND_STRENGTH_MIN: float = 12.0
+const WIND_STRENGTH_MAX: float = 52.0
+const WIND_DIRECTION_SPEED: float = 0.55
+
+# Lightning flashes when the storm is charged
+const LIGHTNING_MIN_INSTABILITY: float = 32.0
+const LIGHTNING_MIN_ENERGY: float = 25.0
+const LIGHTNING_COOLDOWN_MAX: float = 3.2
+const LIGHTNING_COOLDOWN_MIN: float = 0.9
+const LIGHTNING_FLASH_DURATION: float = 0.18
+const LIGHTNING_FLASH_ALPHA: float = 0.55

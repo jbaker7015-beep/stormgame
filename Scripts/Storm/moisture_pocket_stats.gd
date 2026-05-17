@@ -148,6 +148,12 @@ func _apply_passive_decay(delta: float) -> void:
 			instability - PrototypeBalance.INSTABILITY_DECAY_RATE * 1.5 * delta,
 			0.0
 		)
+	# Energy dissipates unless the pocket is actively synthesizing in overlapping zones.
+	if (not is_in_humidity_zone() or not is_in_heat_zone()) and storm_energy > 0.0:
+		storm_energy = maxf(
+			storm_energy - PrototypeBalance.STORM_ENERGY_DECAY_RATE * delta,
+			0.0
+		)
 
 
 func _update_instability(delta: float) -> void:
