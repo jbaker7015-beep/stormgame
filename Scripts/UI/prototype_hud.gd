@@ -69,13 +69,16 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 	else:
 		_biome_label.text = "Biome: —"
 
+	var in_humid: bool = stats != null and stats.is_in_humidity_zone()
+	var in_heat: bool = stats != null and stats.is_in_heat_zone()
+
 	if energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
-		_hint_label.text = "Updraft forming — keep balancing humidity and heat!"
-	elif instability >= PrototypeBalance.UNSTABLE_AIR_INSTABILITY:
-		_hint_label.text = "Atmosphere is unstable. Feed both resources to grow faster."
-	elif humidity > 1.0 and heat > 1.0:
-		_hint_label.text = "Synthesizing energy. Visit different biomes to raise instability."
+		_hint_label.text = "Updraft forming — overlap humid and hot biomes!"
+	elif in_humid and in_heat:
+		_hint_label.text = "Synthesizing energy — stay in overlapping humid + heat zones."
+	elif in_humid or in_heat:
+		_hint_label.text = "Find a biome with the other resource to grow storm energy."
 	elif humidity <= 1.0 and heat <= 1.0:
-		_hint_label.text = "Explore oceans, forests, cities, and plains to gather resources."
+		_hint_label.text = "Enter colored biomes to collect humidity and heat."
 	else:
-		_hint_label.text = "Collect humidity and heat from complementary biomes."
+		_hint_label.text = "Leave biomes — resources decay. Re-enter to grow again."

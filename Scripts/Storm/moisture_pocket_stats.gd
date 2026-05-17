@@ -22,6 +22,8 @@ var active_biome_label: String = ""
 var _zone_humidity_rate: float = 0.0
 var _zone_heat_rate: float = 0.0
 var _zone_instability_rate: float = 0.0
+var _humidity_zone_count: int = 0
+var _heat_zone_count: int = 0
 var _growth_stage: GrowthStage = GrowthStage.MOISTURE_POCKET
 var _active_biomes: Dictionary = {}
 
@@ -48,6 +50,10 @@ func add_zone_contribution(
 	_zone_humidity_rate += humidity_rate
 	_zone_heat_rate += heat_rate
 	_zone_instability_rate += instability_rate
+	if humidity_rate > 0.0:
+		_humidity_zone_count += 1
+	if heat_rate > 0.0:
+		_heat_zone_count += 1
 	_active_biomes[biome_label] = int(_active_biomes.get(biome_label, 0)) + 1
 	_refresh_active_biome_label()
 
@@ -61,11 +67,27 @@ func remove_zone_contribution(
 	_zone_humidity_rate = maxf(_zone_humidity_rate - humidity_rate, 0.0)
 	_zone_heat_rate = maxf(_zone_heat_rate - heat_rate, 0.0)
 	_zone_instability_rate = maxf(_zone_instability_rate - instability_rate, 0.0)
+	if humidity_rate > 0.0:
+		_humidity_zone_count = maxi(_humidity_zone_count - 1, 0)
+	if heat_rate > 0.0:
+		_heat_zone_count = maxi(_heat_zone_count - 1, 0)
 	if _active_biomes.has(biome_label):
 		_active_biomes[biome_label] = int(_active_biomes[biome_label]) - 1
 		if _active_biomes[biome_label] <= 0:
 			_active_biomes.erase(biome_label)
 	_refresh_active_biome_label()
+
+
+func is_in_humidity_zone() -> bool:
+	return _humidity_zone_count > 0
+
+
+func is_in_heat_zone() -> bool:
+	return _heat_zone_count > 0
+
+
+func is_in_any_zone() -> bool:
+	return _humidity_zone_count > 0 or _heat_zone_count > 0
 
 
 func _refresh_active_biome_label() -> void:
@@ -117,13 +139,21 @@ func _apply_zone_collection(delta: float) -> void:
 
 
 func _apply_passive_decay(delta: float) -> void:
-	if _zone_humidity_rate <= 0.0 and humidity > 0.0:
+	if not is_in_humidity_zone() and humidity > 0.0:
 		humidity = maxf(humidity - PrototypeBalance.HUMIDITY_DECAY_RATE * delta, 0.0)
-	if _zone_heat_rate <= 0.0 and heat_energy > 0.0:
+	if not is_in_heat_zone() and heat_energy > 0.0:
 		heat_energy = maxf(heat_energy - PrototypeBalance.HEAT_DECAY_RATE * delta, 0.0)
+	if not is_in_any_zone() and instability > 0.0:
+		instability = maxf(
+			instability - PrototypeBalance.INSTABILITY_DECAY_RATE * 1.5 * delta,
+			0.0
+		)
 
 
 func _update_instability(delta: float) -> void:
+	if not is_in_any_zone():
+		return
+
 	var synergy: float = minf(humidity, heat_energy) / PrototypeBalance.MAX_HUMIDITY
 	var imbalance: float = absf(humidity - heat_energy) / PrototypeBalance.MAX_HUMIDITY
 
@@ -132,14 +162,11 @@ func _update_instability(delta: float) -> void:
 			synergy * PrototypeBalance.INSTABILITY_SYNERGY_RATE
 			- imbalance * PrototypeBalance.INSTABILITY_IMBALANCE_PENALTY
 		) * delta
-	else:
-		instability = maxf(
-			instability - PrototypeBalance.INSTABILITY_DECAY_RATE * delta,
-			0.0
-		)
 
 	if (
-		humidity >= PrototypeBalance.INSTABILITY_HIGH_RESOURCE_THRESHOLD
+		is_in_humidity_zone()
+		and is_in_heat_zone()
+		and humidity >= PrototypeBalance.INSTABILITY_HIGH_RESOURCE_THRESHOLD
 		and heat_energy >= PrototypeBalance.INSTABILITY_HIGH_RESOURCE_THRESHOLD
 	):
 		instability += PrototypeBalance.INSTABILITY_HIGH_RESOURCE_BONUS * delta
@@ -149,6 +176,9 @@ func _update_instability(delta: float) -> void:
 
 
 func _update_storm_energy(delta: float) -> void:
+	# Synthesis only while overlapping both a humidity source and a heat source.
+	if not is_in_humidity_zone() or not is_in_heat_zone():
+		return
 	if humidity <= 1.0 or heat_energy <= 1.0:
 		return
 

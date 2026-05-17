@@ -23,8 +23,11 @@ func _ready() -> void:
 	_setup_shape()
 	_apply_zone_theme()
 	WeatherManager.register_zone(self)
+	monitoring = true
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	# Bodies already inside the zone when the level loads do not trigger body_entered.
+	call_deferred("_sync_overlapping_bodies")
 
 
 func _exit_tree() -> void:
@@ -58,6 +61,11 @@ func _setup_shape() -> void:
 func _apply_zone_theme() -> void:
 	_fill.color = _preset.get("fill_color", Color(0.4, 0.6, 0.9, 0.25))
 	_aura.color = _preset.get("aura_color", Color(1.0, 1.0, 1.0, 0.4))
+
+
+func _sync_overlapping_bodies() -> void:
+	for body in get_overlapping_bodies():
+		_on_body_entered(body)
 
 
 func _on_body_entered(body: Node2D) -> void:

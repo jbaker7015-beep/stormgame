@@ -3,9 +3,10 @@
 [ext_resource type="Script" path="res://Scripts/Weather/atmospheric_zone.gd" id="1_zone"]
 
 [node name="AtmosphericZone" type="Area2D"]
-collision_layer = 0
+collision_layer = 2
 collision_mask = 1
 monitorable = false
+monitoring = true
 script = ExtResource("1_zone")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
