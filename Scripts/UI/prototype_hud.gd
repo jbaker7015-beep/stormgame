@@ -1,10 +1,13 @@
 extends Control
 
-## Basic HUD for Prototype Phase 1 — shows humidity, heat, and storm energy.
+## HUD for Prototype Phase 2 — resources, instability, and growth stage.
 
 @onready var _humidity_bar: ProgressBar = %HumidityBar
 @onready var _heat_bar: ProgressBar = %HeatBar
 @onready var _energy_bar: ProgressBar = %EnergyBar
+@onready var _instability_bar: ProgressBar = %InstabilityBar
+@onready var _stage_label: Label = %StageLabel
+@onready var _biome_label: Label = %BiomeLabel
 @onready var _hint_label: Label = %HintLabel
 
 
@@ -19,6 +22,7 @@ func _configure_bars() -> void:
 	_humidity_bar.max_value = PrototypeBalance.MAX_HUMIDITY
 	_heat_bar.max_value = PrototypeBalance.MAX_HEAT
 	_energy_bar.max_value = PrototypeBalance.MAX_STORM_ENERGY
+	_instability_bar.max_value = PrototypeBalance.MAX_INSTABILITY
 
 
 func _on_player_registered(player: Node2D) -> void:
@@ -26,17 +30,52 @@ func _on_player_registered(player: Node2D) -> void:
 	if stats == null:
 		return
 	stats.stats_changed.connect(_on_stats_changed)
-	_on_stats_changed(stats.humidity, stats.heat_energy, stats.storm_energy)
+	stats.growth_stage_changed.connect(_on_growth_stage_changed)
+	_on_stats_changed(stats.humidity, stats.heat_energy, stats.storm_energy, stats.instability)
+	_stage_label.text = "Stage: %s" % stats.get_growth_stage_label()
+	_apply_stage_color(stats.get_growth_stage())
 
 
-func _on_stats_changed(humidity: float, heat: float, energy: float) -> void:
+func _on_stats_changed(humidity: float, heat: float, energy: float, instability: float) -> void:
 	_humidity_bar.value = humidity
 	_heat_bar.value = heat
 	_energy_bar.value = energy
+	_instability_bar.value = instability
+	_update_hint(humidity, heat, energy, instability)
 
-	if humidity > 1.0 and heat > 1.0:
-		_hint_label.text = "Synthesizing storm energy — stay in blue and orange zones!"
-	elif humidity <= 1.0 and heat <= 1.0:
-		_hint_label.text = "Move into humidity (blue) and heat (orange) zones."
+
+func _on_growth_stage_changed(stage: int) -> void:
+	var stats: Node = GameManager.get_player_stats()
+	if stats == null:
+		return
+	_stage_label.text = "Stage: %s" % stats.get_growth_stage_label()
+	_apply_stage_color(stage)
+
+
+func _apply_stage_color(stage: int) -> void:
+	match stage:
+		MoisturePocketStats.GrowthStage.UPDRAFT_FORMING:
+			_stage_label.modulate = Color(1.0, 0.88, 0.55)
+		MoisturePocketStats.GrowthStage.UNSTABLE_AIR:
+			_stage_label.modulate = Color(0.85, 0.75, 1.0)
+		_:
+			_stage_label.modulate = Color(0.9, 0.95, 1.0)
+
+
+func _update_hint(humidity: float, heat: float, energy: float, instability: float) -> void:
+	var stats: Node = GameManager.get_player_stats()
+	if stats != null and stats.active_biome_label != "":
+		_biome_label.text = "Biome: %s" % stats.active_biome_label
 	else:
-		_hint_label.text = "Collect both humidity and heat to grow."
+		_biome_label.text = "Biome: —"
+
+	if energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
+		_hint_label.text = "Updraft forming — keep balancing humidity and heat!"
+	elif instability >= PrototypeBalance.UNSTABLE_AIR_INSTABILITY:
+		_hint_label.text = "Atmosphere is unstable. Feed both resources to grow faster."
+	elif humidity > 1.0 and heat > 1.0:
+		_hint_label.text = "Synthesizing energy. Visit different biomes to raise instability."
+	elif humidity <= 1.0 and heat <= 1.0:
+		_hint_label.text = "Explore oceans, forests, cities, and plains to gather resources."
+	else:
+		_hint_label.text = "Collect humidity and heat from complementary biomes."

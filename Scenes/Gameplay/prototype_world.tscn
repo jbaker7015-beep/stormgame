@@ -33,11 +33,11 @@ color = Color(0.32, 0.48, 0.35, 0.55)
 
 [node name="AmbientMist" type="CPUParticles2D" parent="World"]
 position = Vector2(640, 360)
-amount = 40
+amount = 48
 lifetime = 4.0
 preprocess = 2.0
 emission_shape = 3
-emission_rect_extents = Vector2(700, 400)
+emission_rect_extents = Vector2(720, 420)
 direction = Vector2(0.2, -0.4)
 spread = 40.0
 gravity = Vector2(0, 0)
@@ -47,25 +47,29 @@ scale_amount_min = 0.5
 scale_amount_max = 1.2
 color = Color(0.85, 0.92, 1, 0.12)
 
-[node name="HumidityZoneLake" parent="World" instance=ExtResource("2_zone")]
-position = Vector2(320, 280)
-zone_type = 0
-zone_radius = 140.0
+[node name="Ocean" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(220, 320)
+biome = 0
 
-[node name="HumidityZoneRiver" parent="World" instance=ExtResource("2_zone")]
-position = Vector2(900, 420)
-zone_type = 0
-zone_radius = 100.0
+[node name="Lake" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(520, 520)
+biome = 1
 
-[node name="HeatZoneSun" parent="World" instance=ExtResource("2_zone")]
-position = Vector2(720, 200)
-zone_type = 1
-zone_radius = 130.0
+[node name="River" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(980, 380)
+biome = 2
 
-[node name="HeatZoneCity" parent="World" instance=ExtResource("2_zone")]
-position = Vector2(480, 480)
-zone_type = 1
-zone_radius = 110.0
+[node name="City" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(700, 480)
+biome = 3
+
+[node name="Plains" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(860, 180)
+biome = 4
+
+[node name="Forest" parent="World" instance=ExtResource("2_zone")]
+position = Vector2(420, 200)
+biome = 5
 
 [node name="MoisturePocket" parent="World" instance=ExtResource("1_pocket")]
 position = Vector2(640, 360)

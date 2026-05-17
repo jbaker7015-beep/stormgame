@@ -1,19 +1,25 @@
 class_name AtmosphericZone
 extends Area2D
 
-## Placeable humidity or heat region. Overlapping moisture pockets collect resources.
+## Biome-based atmospheric region. Stacks contributions when overlapping multiple zones.
 
-enum ZoneType { HUMIDITY, HEAT }
+const ZoneData = preload("res://Systems/Data/atmospheric_zone_data.gd")
 
-@export var zone_type: ZoneType = ZoneType.HUMIDITY
-@export var zone_radius: float = 120.0
+@export var biome: ZoneData.Biome = ZoneData.Biome.OCEAN
+@export var zone_radius: float = -1.0
 
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 @onready var _fill: Polygon2D = $Fill
 @onready var _aura: CPUParticles2D = $AuraParticles
+var _preset: Dictionary = {}
+var _humidity_rate: float = 0.0
+var _heat_rate: float = 0.0
+var _instability_rate: float = 0.0
+var _display_name: String = ""
 
 
 func _ready() -> void:
+	_load_preset()
 	_setup_shape()
 	_apply_zone_theme()
 	WeatherManager.register_zone(self)
@@ -25,12 +31,22 @@ func _exit_tree() -> void:
 	WeatherManager.unregister_zone(self)
 
 
+func _load_preset() -> void:
+	_preset = ZoneData.get_preset(biome)
+	_display_name = _preset.get("display_name", "Zone")
+	_humidity_rate = _preset.get("humidity_rate", 0.0)
+	_heat_rate = _preset.get("heat_rate", 0.0)
+	_instability_rate = _preset.get("instability_rate", 0.0)
+
+	if zone_radius <= 0.0:
+		zone_radius = _preset.get("default_radius", 120.0)
+
+
 func _setup_shape() -> void:
 	var circle := CircleShape2D.new()
 	circle.radius = zone_radius
 	_shape.shape = circle
 
-	# Visual disc approximating the collision area.
 	var points: PackedVector2Array = PackedVector2Array()
 	var segments := 32
 	for i in segments:
@@ -40,35 +56,22 @@ func _setup_shape() -> void:
 
 
 func _apply_zone_theme() -> void:
-	match zone_type:
-		ZoneType.HUMIDITY:
-			_fill.color = Color(0.25, 0.55, 0.95, 0.22)
-			_aura.color = Color(0.4, 0.7, 1.0, 0.5)
-		ZoneType.HEAT:
-			_fill.color = Color(0.95, 0.45, 0.2, 0.22)
-			_aura.color = Color(1.0, 0.6, 0.25, 0.5)
+	_fill.color = _preset.get("fill_color", Color(0.4, 0.6, 0.9, 0.25))
+	_aura.color = _preset.get("aura_color", Color(1.0, 1.0, 1.0, 0.4))
 
 
 func _on_body_entered(body: Node2D) -> void:
 	var stats: Node = _get_stats_from_body(body)
 	if stats == null:
 		return
-	match zone_type:
-		ZoneType.HUMIDITY:
-			stats.set_in_humidity_zone(true)
-		ZoneType.HEAT:
-			stats.set_in_heat_zone(true)
+	stats.add_zone_contribution(_humidity_rate, _heat_rate, _instability_rate, _display_name)
 
 
 func _on_body_exited(body: Node2D) -> void:
 	var stats: Node = _get_stats_from_body(body)
 	if stats == null:
 		return
-	match zone_type:
-		ZoneType.HUMIDITY:
-			stats.set_in_humidity_zone(false)
-		ZoneType.HEAT:
-			stats.set_in_heat_zone(false)
+	stats.remove_zone_contribution(_humidity_rate, _heat_rate, _instability_rate, _display_name)
 
 
 func _get_stats_from_body(body: Node2D) -> Node:

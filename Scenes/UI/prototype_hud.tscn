@@ -16,16 +16,26 @@ script = ExtResource("1_hud")
 layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 360.0
-offset_bottom = 200.0
+offset_right = 400.0
+offset_bottom = 290.0
 
 [node name="VBox" type="VBoxContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-text = "StormGame — Prototype 1"
+text = "StormGame — Prototype 2"
+
+[node name="StageLabel" type="Label" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Stage: Moisture Pocket"
+
+[node name="BiomeLabel" type="Label" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Biome: —"
 
 [node name="HumidityLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
@@ -42,6 +52,16 @@ layout_mode = 2
 text = "Heat"
 
 [node name="HeatBar" type="ProgressBar" parent="Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="InstabilityLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Instability"
+
+[node name="InstabilityBar" type="ProgressBar" parent="Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 100.0
