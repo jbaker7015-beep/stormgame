@@ -1,25 +1,28 @@
-[gd_scene load_steps=2 format=3 uid="uid://storm_weather_effects"]
+[gd_scene load_steps=3 format=3 uid="uid://storm_weather_effects"]
 
 [ext_resource type="Script" path="res://Scripts/Weather/storm_weather_effects.gd" id="1_weather"]
+[ext_resource type="Script" path="res://Scripts/Weather/weather_visual_draw.gd" id="2_visual_draw"]
 
 [node name="StormWeather" type="Node2D"]
+z_index = 2
 script = ExtResource("1_weather")
 
-[node name="RainParticles" type="CPUParticles2D" parent="."]
-emitting = false
-amount = 40
-lifetime = 0.9
-preprocess = 0.4
-emission_shape = 1
-emission_sphere_radius = 95.0
-direction = Vector2(0.1, 1)
-spread = 18.0
-gravity = Vector2(0, 420)
-initial_velocity_min = 80.0
-initial_velocity_max = 140.0
-scale_amount_min = 0.15
-scale_amount_max = 0.45
-color = Color(0.65, 0.78, 0.95, 0.45)
+[node name="WeatherVisuals" type="Node2D" parent="."]
+z_index = 10
+script = ExtResource("2_visual_draw")
+
+[node name="RainOverlayLayer" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="RainTint" type="ColorRect" parent="RainOverlayLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.72, 0.82, 0.98, 0.18)
 
 [node name="LightningLayer" type="CanvasLayer" parent="."]
 layer = 8

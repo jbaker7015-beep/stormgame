@@ -72,10 +72,10 @@ biome = 4
 position = Vector2(420, 200)
 biome = 5
 
-[node name="StormWeather" parent="World" instance=ExtResource("4_weather")]
-
 [node name="MoisturePocket" parent="World" instance=ExtResource("1_pocket")]
 position = Vector2(640, 360)
+
+[node name="StormWeather" parent="World" instance=ExtResource("4_weather")]
 
 [node name="HUDLayer" type="CanvasLayer" parent="."]
 

@@ -79,8 +79,13 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 		and energy >= PrototypeBalance.LIGHTNING_MIN_ENERGY
 	):
 		_hint_label.text = "Charged atmosphere — watch for lightning and wind drift."
-	elif humidity >= PrototypeBalance.RAIN_MIN_HUMIDITY and energy >= PrototypeBalance.RAIN_MIN_ENERGY:
-		_hint_label.text = "Rain forming — humidity and energy are high enough."
+	elif energy >= PrototypeBalance.RAIN_MIN_ENERGY and (
+		humidity >= PrototypeBalance.RAIN_MIN_HUMIDITY
+		or instability >= PrototypeBalance.RAIN_MIN_INSTABILITY
+	):
+		_hint_label.text = "Rain active — white streaks + blue screen tint. Release WASD to feel wind."
+	elif energy >= 8.0 or instability >= 15.0:
+		_hint_label.text = "Storm building — wind will push you when energy or instability rise."
 	elif in_humid and in_heat:
 		_hint_label.text = "Synthesizing energy — stay in overlapping humid + heat zones."
 	elif in_humid or in_heat:

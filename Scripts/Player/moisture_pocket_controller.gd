@@ -27,10 +27,10 @@ func _physics_process(delta: float) -> void:
 			PrototypeBalance.MOVE_FRICTION * delta
 		)
 
-	# Phase 3: wind drift pushes the pocket even without player input.
+	# Phase 3: wind drift — blend toward wind velocity so it is easy to feel.
 	var wind: Vector2 = _get_wind_vector()
 	if wind.length_squared() > 0.01:
-		velocity += wind * delta
+		velocity = velocity.move_toward(wind, PrototypeBalance.WIND_PUSH_ACCEL * delta)
 
 	move_and_slide()
 

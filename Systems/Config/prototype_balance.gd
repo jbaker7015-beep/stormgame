@@ -51,16 +51,18 @@ const CAMERA_ZOOM_STEP: float = 0.08
 
 # --- Prototype Phase 3: weather effects ---
 
-# Rain intensity scales with humidity and storm energy
-const RAIN_MIN_HUMIDITY: float = 20.0
-const RAIN_MIN_ENERGY: float = 15.0
-const RAIN_PARTICLES_MIN: int = 0
-const RAIN_PARTICLES_MAX: int = 72
+# Rain — needs storm energy plus humidity OR instability (charged storm)
+const RAIN_MIN_HUMIDITY: float = 8.0
+const RAIN_MIN_ENERGY: float = 8.0
+const RAIN_MIN_INSTABILITY: float = 16.0
+const RAIN_PARTICLES_MIN: int = 24
+const RAIN_PARTICLES_MAX: int = 110
 
-# Wind drift applied to the moisture pocket (pixels / second)
-const WIND_STRENGTH_MIN: float = 12.0
-const WIND_STRENGTH_MAX: float = 52.0
+# Wind drift (pixels / second) — applied as steady push, noticeable when charged
+const WIND_STRENGTH_MIN: float = 35.0
+const WIND_STRENGTH_MAX: float = 110.0
 const WIND_DIRECTION_SPEED: float = 0.55
+const WIND_PUSH_ACCEL: float = 180.0
 
 # Lightning flashes when the storm is charged
 const LIGHTNING_MIN_INSTABILITY: float = 32.0

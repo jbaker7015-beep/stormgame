@@ -3,7 +3,8 @@ extends Node2D
 
 ## Prototype Phase 3 — rain, wind, and lightning driven by player storm stats.
 
-@onready var _rain: CPUParticles2D = $RainParticles
+@onready var _visuals: Node2D = $WeatherVisuals
+@onready var _rain_tint: ColorRect = $RainOverlayLayer/RainTint
 @onready var _flash: ColorRect = $LightningLayer/Flash
 @onready var _bolt: Line2D = $LightningLayer/Bolt
 
@@ -11,16 +12,19 @@ var _player: Node2D = null
 var _stats: Node = null
 var _wind_vector: Vector2 = Vector2.ZERO
 var _wind_angle: float = 0.0
+var _rain_intensity: float = 0.0
 var _lightning_cooldown: float = 0.0
 var _flash_timer: float = 0.0
 
 
 func _ready() -> void:
 	add_to_group("storm_weather")
+	z_index = 2
 	_flash.visible = false
 	_flash.modulate.a = 0.0
 	_bolt.visible = false
-	_rain.emitting = false
+	_rain_tint.visible = false
+	_rain_tint.modulate.a = 0.0
 	GameManager.player_registered.connect(_on_player_registered)
 	if GameManager.player != null:
 		_on_player_registered(GameManager.player)
@@ -29,11 +33,15 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _stats == null or _player == null:
 		_wind_vector = Vector2.ZERO
+		_rain_intensity = 0.0
+		_apply_visuals(0.0, 0.0)
 		return
 
 	global_position = _player.global_position
-	_update_wind(delta)
-	_update_rain()
+	var storm_intensity: float = _get_storm_intensity()
+	_update_wind(delta, storm_intensity)
+	_rain_intensity = _get_rain_intensity()
+	_apply_visuals(_rain_intensity, storm_intensity)
 	_update_lightning(delta)
 	_update_flash(delta)
 
@@ -42,27 +50,20 @@ func get_wind_vector() -> Vector2:
 	return _wind_vector
 
 
+func _get_storm_intensity() -> float:
+	return clampf(
+		_stats.get_energy_ratio() * 0.5 + _stats.get_instability_ratio() * 0.5,
+		0.0,
+		1.0
+	)
+
+
 func _on_player_registered(player: Node2D) -> void:
 	_player = player
 	_stats = player.get_node_or_null("Stats")
-	if _stats != null:
-		_stats.stats_changed.connect(_on_stats_changed)
 
 
-func _on_stats_changed(
-	_humidity: float,
-	_heat: float,
-	_energy: float,
-	_instability: float
-) -> void:
-	_update_rain()
-
-
-func _update_wind(delta: float) -> void:
-	var energy_ratio: float = _stats.get_energy_ratio()
-	var instability_ratio: float = _stats.get_instability_ratio()
-	var intensity: float = clampf(energy_ratio * 0.55 + instability_ratio * 0.45, 0.0, 1.0)
-
+func _update_wind(delta: float, intensity: float) -> void:
 	_wind_angle += delta * (PrototypeBalance.WIND_DIRECTION_SPEED + intensity * 1.2)
 	var strength: float = lerpf(
 		PrototypeBalance.WIND_STRENGTH_MIN,
@@ -71,42 +72,44 @@ func _update_wind(delta: float) -> void:
 	)
 	_wind_vector = Vector2(cos(_wind_angle), sin(_wind_angle)) * strength
 
-	# Rain falls slightly with the wind for a cohesive look.
-	_rain.direction = (_wind_vector.normalized() * 0.35 + Vector2(0.1, 1.0)).normalized()
 
-
-func _update_rain() -> void:
+func _get_rain_intensity() -> float:
 	var humidity: float = _stats.humidity
 	var energy: float = _stats.storm_energy
-	var humidity_ready: float = clampf(
-		(humidity - PrototypeBalance.RAIN_MIN_HUMIDITY)
-		/ (PrototypeBalance.MAX_HUMIDITY - PrototypeBalance.RAIN_MIN_HUMIDITY),
-		0.0,
-		1.0
-	)
+	var instability: float = _stats.instability
+
+	if energy < PrototypeBalance.RAIN_MIN_ENERGY:
+		return 0.0
+
 	var energy_ready: float = clampf(
 		(energy - PrototypeBalance.RAIN_MIN_ENERGY)
 		/ (PrototypeBalance.MAX_STORM_ENERGY - PrototypeBalance.RAIN_MIN_ENERGY),
 		0.0,
 		1.0
 	)
-	var rain_intensity: float = minf(humidity_ready, energy_ready)
-
-	if rain_intensity <= 0.02:
-		_rain.emitting = false
-		return
-
-	_rain.emitting = true
-	_rain.amount = maxi(
-		1,
-		int(
-			lerpf(
-				float(PrototypeBalance.RAIN_PARTICLES_MIN),
-				float(PrototypeBalance.RAIN_PARTICLES_MAX),
-				rain_intensity
-			)
-		)
+	var humidity_ready: float = clampf(
+		(humidity - PrototypeBalance.RAIN_MIN_HUMIDITY)
+		/ (PrototypeBalance.MAX_HUMIDITY - PrototypeBalance.RAIN_MIN_HUMIDITY),
+		0.0,
+		1.0
 	)
+	var instability_ready: float = clampf(
+		(instability - PrototypeBalance.RAIN_MIN_INSTABILITY)
+		/ (PrototypeBalance.MAX_INSTABILITY - PrototypeBalance.RAIN_MIN_INSTABILITY),
+		0.0,
+		1.0
+	)
+
+	var moisture_factor: float = maxf(humidity_ready, instability_ready * 0.85)
+	return minf(energy_ready, moisture_factor)
+
+
+func _apply_visuals(rain: float, storm_intensity: float) -> void:
+	_visuals.set_weather(rain, _wind_vector, storm_intensity)
+
+	var show_tint: bool = rain > 0.08
+	_rain_tint.visible = show_tint
+	_rain_tint.modulate = Color(0.72, 0.82, 0.98, lerpf(0.0, 0.22, rain))
 
 
 func _update_lightning(delta: float) -> void:
@@ -116,11 +119,9 @@ func _update_lightning(delta: float) -> void:
 	if _lightning_cooldown > 0.0:
 		return
 
-	var instability: float = _stats.instability
-	var energy: float = _stats.storm_energy
-	if instability < PrototypeBalance.LIGHTNING_MIN_INSTABILITY:
+	if _stats.instability < PrototypeBalance.LIGHTNING_MIN_INSTABILITY:
 		return
-	if energy < PrototypeBalance.LIGHTNING_MIN_ENERGY:
+	if _stats.storm_energy < PrototypeBalance.LIGHTNING_MIN_ENERGY:
 		return
 
 	var charge: float = clampf(
@@ -128,8 +129,7 @@ func _update_lightning(delta: float) -> void:
 		0.0,
 		1.0
 	)
-	var strike_chance: float = charge * 0.04
-	if randf() > strike_chance:
+	if randf() > charge * 0.04:
 		return
 
 	_trigger_lightning(charge)
@@ -147,9 +147,8 @@ func _trigger_lightning(charge: float) -> void:
 		randf_range(-220.0, -90.0)
 	)
 	_bolt.points = PackedVector2Array([bolt_start, bolt_end])
-	_bolt.default_color = Color(0.85, 0.92, 1.0, 0.9)
-	_bolt.width = lerpf(2.0, 4.5, charge)
 	_bolt.visible = true
+	_bolt.width = lerpf(2.0, 4.5, charge)
 
 	_lightning_cooldown = lerpf(
 		PrototypeBalance.LIGHTNING_COOLDOWN_MAX,
@@ -165,7 +164,8 @@ func _update_flash(delta: float) -> void:
 		return
 
 	_flash_timer = maxf(_flash_timer - delta, 0.0)
-	var fade: float = _flash_timer / PrototypeBalance.LIGHTNING_FLASH_DURATION
-	_flash.modulate.a = PrototypeBalance.LIGHTNING_FLASH_ALPHA * fade
+	_flash.modulate.a = PrototypeBalance.LIGHTNING_FLASH_ALPHA * (
+		_flash_timer / PrototypeBalance.LIGHTNING_FLASH_DURATION
+	)
 	if _flash_timer <= 0.0:
 		_bolt.visible = false
