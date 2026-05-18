@@ -8,7 +8,7 @@ enum Season { SPRING, SUMMER, FALL, WINTER }
 const ZONE_COUNT: int = 12
 
 static var _zones: Array = []
-static var _base: Array = []
+awddstatic var _base: Array = []
 static var _initialized: bool = false
 
 
