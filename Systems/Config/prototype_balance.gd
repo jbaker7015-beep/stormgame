@@ -10,8 +10,8 @@ const TRAJECTORY_ACCELERATION: float = 220.0
 const TRAJECTORY_FRICTION: float = 380.0
 const TRAJECTORY_ENV_BLEND: float = 0.38
 const TRAJECTORY_ARRIVAL_RADIUS: float = 36.0
-const TRAJECTORY_MIN_SEGMENT_PX: float = 48.0
-const TRAJECTORY_MAX_WAYPOINTS: int = 12
+const TRAJECTORY_MIN_DRAG_PX: float = 36.0
+const TRAJECTORY_MAX_DRAG_PX: float = 900.0
 const TRAJECTORY_REPLAN_COOLDOWN: float = 2.5
 
 # Legacy arcade movement (hold Shift if LEGACY_WASD_MOVEMENT false)

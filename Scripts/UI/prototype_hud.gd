@@ -143,5 +143,5 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 func _movement_hint_prefix() -> String:
 	if PrototypeBalance.LEGACY_WASD_MOVEMENT:
 		return ""
-	return "Click-drag to plan path · Hold Shift = debug WASD · "
+	return "LMB drag heading from storm · RMB cancel route (keep drifting) · Shift=WASD debug · "
 
