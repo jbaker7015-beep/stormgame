@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://Scripts/Player/moisture_pocket_visuals.gd" id="3_visuals"]
 [ext_resource type="Script" path="res://Scripts/Utilities/camera_controller.gd" id="4_camera"]
 [ext_resource type="Script" path="res://Scripts/Storm/stage_transition_effect.gd" id="5_transition"]
+[ext_resource type="Script" path="res://Scripts/Storm/storm_path_visual.gd" id="7_path"]
 [ext_resource type="PackedScene" uid="uid://storm_weather_effects" path="res://Scenes/Effects/storm_weather.tscn" id="6_weather"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
@@ -86,6 +87,10 @@ color = Color(0.9, 0.95, 1, 0.7)
 polygon = PackedVector2Array(-26, 0, -18, -18, 0, -26, 18, -18, 26, 0, 18, 18, 0, 26, -18, 18)
 
 [node name="StormWeather" parent="." instance=ExtResource("6_weather")]
+
+[node name="PathVisual" type="Node2D" parent="."]
+z_index = 4
+script = ExtResource("7_path")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

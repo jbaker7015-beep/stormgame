@@ -34,6 +34,18 @@ Movement should feel **heavy, slow, and constrained by wind** — not twitch arc
 - **Replan** on cooldown (organization penalty for sharp turns)
 - Actual motion blends **planned path** with **environmental wind** and **cold-pool push**
 
+## Tactical radar (S8b)
+
+See [StormTacticalRadar.md](StormTacticalRadar.md).
+
+| Input | Action |
+|-------|--------|
+| **M** | Toggle **expanded zone** weather map (TV-style radar + 10‑min nowcast loop) |
+| **Esc** | Close expanded radar |
+| Minimap (bottom-right) | Always visible in play; shows all storms; auto-loops forecast |
+
+Use radar to decide whether to **stay on course** or **replan** path.
+
 ## Camera (S8)
 
 | Input | Action |
@@ -42,6 +54,8 @@ Movement should feel **heavy, slow, and constrained by wind** — not twitch arc
 | Scroll wheel | Zoom |
 | Snap key (e.g. Space / Home) | Return to player storm |
 | Hover storm | Stat panel |
+
+**Note:** **M** = tactical map, not camera. Rebind in accessibility if needed.
 
 ## Day planning (S9 + M1–M5)
 

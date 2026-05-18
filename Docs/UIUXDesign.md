@@ -4,7 +4,8 @@
 **Difficulty UI:** badge + optional live ingredient checklist per [StormDifficultyDesign.md](StormDifficultyDesign.md).  
 **Briefing UX:** [USMapAndZonesDesign.md](USMapAndZonesDesign.md) — CONUS 2.5D → overlay tabs → zone zoom → spawn pick.  
 **Multiplayer briefing:** [BriefingZoneOccupancy.md](BriefingZoneOccupancy.md) — per-zone Storm/Agency 👤 vs 🤖 badges, live updates.  
-**Recap UX:** [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md) — $ damage table + heatmap at 24:00.
+**Recap UX:** [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md) — $ damage table + heatmap at 24:00.  
+**In-game tactical radar:** [StormTacticalRadar.md](StormTacticalRadar.md) — bottom-right minimap + **M** expand.
 
 # Philosophy
 
@@ -47,6 +48,18 @@ Displays:
 ---
 
 # Radar Design
+
+## Tactical radar (in-day) — primary
+
+See [StormTacticalRadar.md](StormTacticalRadar.md).
+
+- **Bottom-right minimap** — TV-style reflectivity, loops **next 10 minutes** on current course  
+- **`M`** — expand to **full zone** radar; all player + AI storms  
+- Used to **replan** or stay on path  
+
+## Briefing radar (pre-day)
+
+CONUS / zone overlays (CAPE, Td, shear) — [USMapAndZonesDesign.md](USMapAndZonesDesign.md).
 
 Radar should:
 - feel dynamic

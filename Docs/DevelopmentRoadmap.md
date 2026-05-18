@@ -17,7 +17,8 @@ Multiplayer and **Weather Service / agency** should NOT be the focus until the *
 **Meteorology terms (NOAA/NWS/SPC):** [StormMeteorologyReference.md](StormMeteorologyReference.md)  
 **Player cheat sheet / difficulty:** [StormPlayerCheatSheet.md](StormPlayerCheatSheet.md), [StormDifficultyDesign.md](StormDifficultyDesign.md)  
 **U.S. map / day / recap:** [USMapAndZonesDesign.md](USMapAndZonesDesign.md), [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md), [PlayerProgressionDesign.md](PlayerProgressionDesign.md)  
-**Multiplayer briefing occupancy:** [BriefingZoneOccupancy.md](BriefingZoneOccupancy.md), [MultiplayerDesign.md](MultiplayerDesign.md)
+**Multiplayer briefing occupancy:** [BriefingZoneOccupancy.md](BriefingZoneOccupancy.md), [MultiplayerDesign.md](MultiplayerDesign.md)  
+**Tactical radar (in-day):** [StormTacticalRadar.md](StormTacticalRadar.md)
 
 ---
 

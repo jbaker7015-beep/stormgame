@@ -9,6 +9,7 @@
 | Rule | Detail |
 |------|--------|
 | **Start** | **00:00** (midnight) when player confirms spawn |
+| **Briefing** | **Unlimited** until player presses **Ready** (no forced timer) |
 | **End** | **24:00** (midnight) — day complete |
 | **Time display** | HUD clock `HH:MM`; optional “Day 1” label for multi-day modes (future) |
 

@@ -2,7 +2,19 @@ extends Node
 
 ## Autoload singleton: tuning values for StormGame prototypes.
 
-# Movement (CharacterBody2D — acceleration model for smooth feel)
+# Movement — S2 trajectory (primary)
+const LEGACY_WASD_MOVEMENT: bool = false
+const TRAJECTORY_CRUISE_SPEED: float = 52.0
+const TRAJECTORY_MAX_SPEED: float = 78.0
+const TRAJECTORY_ACCELERATION: float = 220.0
+const TRAJECTORY_FRICTION: float = 380.0
+const TRAJECTORY_ENV_BLEND: float = 0.38
+const TRAJECTORY_ARRIVAL_RADIUS: float = 36.0
+const TRAJECTORY_MIN_SEGMENT_PX: float = 48.0
+const TRAJECTORY_MAX_WAYPOINTS: int = 12
+const TRAJECTORY_REPLAN_COOLDOWN: float = 2.5
+
+# Legacy arcade movement (hold Shift if LEGACY_WASD_MOVEMENT false)
 const MOVE_SPEED: float = 280.0
 const MOVE_ACCELERATION: float = 1200.0
 const MOVE_FRICTION: float = 900.0

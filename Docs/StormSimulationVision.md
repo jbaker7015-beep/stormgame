@@ -82,6 +82,20 @@ Real storms do not teleport; they **propagate** with environmental flow and thei
 
 ---
 
+## Tactical radar (in-day)
+
+See [StormTacticalRadar.md](StormTacticalRadar.md).
+
+| UI | Behavior |
+|----|----------|
+| **Bottom-right minimap** | TV-style reflectivity; **loops next 10 min** if storms stay on course |
+| **`M` key** | Expand to **full zone** radar + forecast; **all player + AI storms** |
+| Purpose | Decide to **replan** path or **continue** |
+
+Not the same as pre-day CONUS briefing overlays.
+
+---
+
 ## Match Day Flow (Storm Side Only)
 
 *Weather Service is **far future**. One match = **one calendar day** (**00:00–24:00**) on the **continental U.S.** map.

@@ -1,6 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://storm_prototype_world"]
 
 [ext_resource type="Script" path="res://Scripts/World/biome_map_overlay.gd" id="1_map"]
+[ext_resource type="Script" path="res://Scripts/World/atmosphere_overlay_draw.gd" id="7_atmo"]
 [ext_resource type="Script" path="res://Scripts/World/ai_ecosystem_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://Scripts/World/world_zone_spawner.gd" id="3_zones"]
 [ext_resource type="Script" path="res://Scripts/World/world_camera_setup.gd" id="4_camera_setup"]
@@ -38,6 +39,10 @@ color = Color(0.3, 0.46, 0.34, 0.5)
 [node name="MapOverlay" type="Node2D" parent="World"]
 z_index = -2
 script = ExtResource("1_map")
+
+[node name="AtmosphereOverlay" type="Node2D" parent="World"]
+z_index = -1
+script = ExtResource("7_atmo")
 
 [node name="AmbientMist" type="CPUParticles2D" parent="World"]
 position = Vector2(1280, 720)

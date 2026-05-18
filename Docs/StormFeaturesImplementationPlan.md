@@ -30,6 +30,7 @@
 | **S6** | Lightning v2 | IC forks + CG strikes + timed thunder |
 | **S7** | Recorded audio | Wind, rain, hail, thunder sample pipeline |
 | **S8** | Camera & inspection | Free cam, snap-back, hover stats |
+| **S8b** | Tactical radar | Bottom-right minimap + **M** zone map; 10‑min nowcast loop; all storms |
 | **M1–M5** | CONUS map & briefing | 10 zones, seasons, 2.5D map, overlays, zone zoom, spawns |
 | **M6** | Game day clock | 00:00–24:00, time compression |
 | **M7** | Briefing zone occupancy | Per-zone Storm/Agency 👤 vs 🤖 counts (multiplayer) |
@@ -356,6 +357,27 @@
 
 ---
 
+## S8b — Tactical Radar (TV minimap + zone map)
+
+**Goal:** Broadcast-style **bottom-right radar** + **`M`** expanded zone map with **10-minute nowcast loop** if storms stay on course.
+
+**Spec:** [StormTacticalRadar.md](StormTacticalRadar.md)
+
+**Implement:**
+
+1. `NowcastSimulator` — extrapolate 10 game-min steps from path + steering + mode.  
+2. `TacticalRadarMinimap` — bottom-right; reflectivity + all storm icons; loop animation.  
+3. `TacticalRadarExpanded` — full zone on **M**; same loop; hover storm stats.  
+4. Register all storms (player + AI) in `StormRegistry` autoload or `GameManager`.  
+5. Recompute loop on path commit / replan.  
+6. Input action `toggle_tactical_map` → **M**.
+
+**Exit:** Player watches loop, hits **M**, sees whole zone and every storm’s forecast track.
+
+**Depends:** **S2** (path), **S1** (reflectivity proxy); parallel **S8**
+
+---
+
 ## S9 — Day Planning Integration
 
 **Goal:** Full **briefing → zone → spawn → midnight start** pipeline.
@@ -554,7 +576,7 @@ M1 + S1 (parallel) → M2 → M3 → M4 → M5 → M6
 
 **Storms:**
 ```
-S0 → S1 → S2 → S3 → S8 → S4 → S5 → S6 → S7 → S9 (needs M5,M6) → S10 → S11 → S12
+S0 → S1 → S2 → S3 → S8 + S8b → S4 → S5 → S6 → S7 → S9 (needs M5,M6) → S10 → S11 → S12
 ```
 
 **Destruction:**

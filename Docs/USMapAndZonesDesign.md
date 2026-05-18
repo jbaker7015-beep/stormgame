@@ -16,7 +16,11 @@ The prototype’s single rectangle (`2560×1440`) evolves into a **CONUS-shaped 
 
 ---
 
-## Ten weather-based zones
+## Climate zones (12)
+
+**Full table:** [ClimateZones.md](ClimateZones.md) — historical U.S. regions (not locked to 10).
+
+# Ten weather-based zones (legacy heading — use 12 below)
 
 Each zone is a **climate regime**, not just a biome paint bucket. Daily atmosphere seeds apply **zone baseline + season + day randomness**.
 
@@ -62,6 +66,15 @@ Same zone plays differently in **March** vs **July**.
 ---
 
 ## Map presentation — briefing vs gameplay
+
+**Important:** The **U.S. map and ingredient overlays belong in the briefing window/scene**, not on the live gameplay screen. See [BriefingVsGameplay.md](BriefingVsGameplay.md).
+
+| Phase | Screen |
+|-------|--------|
+| **Briefing** (pre-00:00) | CONUS map, outlook, CAPE/Td/shear tabs, zone zoom, spawn pick |
+| **Gameplay** (after Ready) | World view + storms + **tactical radar** minimap (S8b) — **not** full briefing overlays |
+
+The current `prototype_world` playtest is **gameplay only**; S1’s colored grid there is a **temporary dev overlay**, not final UX.
 
 ### Briefing map (2D with 3D-like look)
 

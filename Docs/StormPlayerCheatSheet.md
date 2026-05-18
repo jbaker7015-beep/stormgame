@@ -124,6 +124,16 @@ On **Easy**, you can still get strong storms solo. On **Extreme**, perfect solo 
 
 ---
 
+## Tactical radar (TV map)
+
+| UI | Tip |
+|----|-----|
+| **Bottom-right minimap** | Radar loop = **next 10 minutes** if everyone stays on current path |
+| **M** | Big **zone map** — same loop, **all player + AI storms** |
+| Use it | Bad loop? **Replan**. Good loop into towns? **Stay the course** |
+
+---
+
 ## Camera & inspection
 
 | Action | Tip |

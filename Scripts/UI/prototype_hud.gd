@@ -109,15 +109,15 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 	var stage: int = stats.get_growth_stage() if stats != null else 0
 
 	if stage == MoisturePocketStats.GrowthStage.MATURE_THUNDERSTORM:
-		_hint_label.text = "Mature Thunderstorm — peak power! Severe rain, wind, lightning, and hail aura."
+		_hint_label.text = _movement_hint_prefix() + "Mature Thunderstorm — peak power! Severe rain, wind, lightning, and hail aura."
 	elif stage == MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
-		_hint_label.text = "Developing Thunderstorm — push stats to reach Mature Thunderstorm."
+		_hint_label.text = _movement_hint_prefix() + "Developing Thunderstorm — push stats to reach Mature Thunderstorm."
 	elif stage == MoisturePocketStats.GrowthStage.CUMULUS_CLOUD:
-		_hint_label.text = "Cumulus Cloud — push energy, instability, and humidity to evolve further."
+		_hint_label.text = _movement_hint_prefix() + "Cumulus Cloud — push energy, instability, and humidity to evolve further."
 	elif stage == MoisturePocketStats.GrowthStage.UPDRAFT_FORMING:
-		_hint_label.text = "Updraft active — push energy and humidity to reach Cumulus Cloud."
+		_hint_label.text = _movement_hint_prefix() + "Updraft active — push energy and humidity to reach Cumulus Cloud."
 	elif energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
-		_hint_label.text = "Severe storm — rain, wind, and lightning active!"
+		_hint_label.text = _movement_hint_prefix() + "Severe storm — rain, wind, and lightning active!"
 	elif (
 		instability >= PrototypeBalance.LIGHTNING_MIN_INSTABILITY
 		and energy >= PrototypeBalance.LIGHTNING_MIN_ENERGY
@@ -135,6 +135,13 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 	elif in_humid or in_heat:
 		_hint_label.text = "Find a biome with the other resource to grow storm energy."
 	elif humidity <= 1.0 and heat <= 1.0:
-		_hint_label.text = "Enter colored biomes — AI rivals seek the same resources."
+		_hint_label.text = _movement_hint_prefix() + "Enter colored biomes — AI rivals seek the same resources."
 	else:
-		_hint_label.text = "Leave biomes — resources decay. Re-enter to grow again."
+		_hint_label.text = _movement_hint_prefix() + "Leave biomes — resources decay. Re-enter to grow again."
+
+
+func _movement_hint_prefix() -> String:
+	if PrototypeBalance.LEGACY_WASD_MOVEMENT:
+		return ""
+	return "Click-drag to plan path · Hold Shift = debug WASD · "
+
