@@ -10,6 +10,8 @@ Storm evolution should feel:
 
 Players should experience the full lifecycle of weather development.
 
+**Evolving design:** Stage numbers below remain useful for **visual tiers**; **storm modes** (supercell, squall line, bow, hook, hail core) are defined in [StormSimulationVision.md](StormSimulationVision.md) and implemented in **S4** of [StormFeaturesImplementationPlan.md](StormFeaturesImplementationPlan.md).
+
 ---
 
 # Base Evolution Path

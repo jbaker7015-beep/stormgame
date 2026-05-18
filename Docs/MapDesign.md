@@ -2,188 +2,106 @@
 
 # Philosophy
 
-StormGame uses a large-scale strategic map representing the continental United States.
+StormGame uses a **continental United States (CONUS)** strategic map — recognizable, readable, and built for weather gameplay.
 
-The map should feel:
-- recognizable
-- atmospheric
-- readable
-- simulation-friendly
+**Authoritative zone & briefing spec:** [USMapAndZonesDesign.md](USMapAndZonesDesign.md)  
+**Day clock & recap:** [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md)
 
-The map is not intended to be a hyper-realistic terrain simulator.
-
-Instead, it prioritizes:
-- weather gameplay
-- ecosystem simulation
-- performance scalability
+The map is not a hyper-realistic terrain simulator. It prioritizes:
+- **10 weather-based climate zones**
+- **Seasonal** variation
+- **2.5D briefing** presentation (terrain pop, cities, major roads)
+- Performance-friendly atmosphere grids
 
 ---
 
-# Geographic Scope
+# Geographic scope
 
-The playable map includes:
-- the continental United States
-- major cities
-- major climate regions
-- oceans
-- mountains
-- plains
-- forests
-- deserts
+- **Continental United States** play space  
+- **10 climate zones** (player may spawn in any zone)  
+- Oceans, Gulf, Great Lakes at margins for moisture/tropical influence  
+- **State borders** — subtle, for readability and future alerts  
 
 ---
 
-# Visual Style
+# Ten weather zones (summary)
 
-The map should use:
-- stylized realism
-- readable terrain
-- simplified large-scale geography
-- atmospheric presentation
+| ID | Zone |
+|----|------|
+| Z01 | Pacific Northwest |
+| Z02 | California Coast |
+| Z03 | Desert Southwest |
+| Z04 | Southern Plains |
+| Z05 | Central Plains (Tornado Alley) |
+| Z06 | Gulf Coast |
+| Z07 | Southeast |
+| Z08 | Florida Peninsula |
+| Z09 | Great Lakes / Upper Midwest |
+| Z10 | Northeast / Mid-Atlantic |
 
-The camera should support:
-- zoomed-out strategic viewing
-- storm-focused close viewing
-
----
-
-# State Borders
-
-State borders should remain visible.
-
-Purpose:
-- weather alerts
-- readability
-- agency operations
-- regional forecasting
-
-Borders should remain subtle but clear.
+Full climate notes, seasons, and briefing flow: [USMapAndZonesDesign.md](USMapAndZonesDesign.md).
 
 ---
 
-# Major Cities
+# Visual style
 
-Major cities act as:
-- population centers
-- infrastructure hubs
-- heat generators
-- economic targets
+## Briefing map (2.5D)
+
+- **2D base** with **3D-like** depth: extruded terrain, parallax, lit slopes  
+- **Visible:** cities, towns, **major interstates**, zone outlines  
+- **Ingredient overlay cuts:** CAPE, CIN, Td, shear, SRH, PW, lift, severe composite  
+- **Click zone** → zoom → zone outlook → **random spawn picks**
+
+## Gameplay map
+
+- Same data; optimized for storm motion and damage overlays  
+- **S12** may add true 3D; briefing can remain 2.5D
+
+---
+
+# Settlements (Mini Towns & Cities)
+
+**Destruction targets:** [DestructionSystem.md](DestructionSystem.md)
+
+| Type | Density | Role |
+|------|---------|------|
+| Hamlet / mini town | Common per zone | Routing practice, small $ damage |
+| Town | Moderate | Mid objectives |
+| City | Rare | High $ damage, heat island |
+
+Distributed **per zone** along rivers, plains, coasts, interstate junctions.
+
+---
+
+# Major roads
+
+- **Interstate highways only** on map art (I-5, I-10, I-40, I-80, I-95, etc.)  
+- Readable on briefing terrain; optional pathing flavor later  
+- Full street grids **not** required
+
+---
+
+# Seasons
+
+**Spring / Summer / Fall / Winter** modify zone climate baselines when each **day** is seeded.
 
 Examples:
-- New York
-- Chicago
-- Dallas
-- Miami
-- Los Angeles
-- Seattle
+- **Z05 Central Plains** — spring max severe  
+- **Z08 Florida** — summer humidity / tropical  
+- **Z09 Great Lakes** — winter lake-effect, summer MCS  
 
-Cities should vary in:
-- population
-- infrastructure
-- climate risk
+See [USMapAndZonesDesign.md](USMapAndZonesDesign.md).
 
 ---
 
-# Major Roads
+# Atmospheric simulation
 
-The map should include:
-- major interstate highways
-- evacuation routes
-- logistics corridors
-
-Roads support:
-- evacuations
-- emergency response
-- infrastructure gameplay
-
-Minor roads are unnecessary.
+Region-based **atmosphere grid** per zone ([AtmosphericSimulation.md](AtmosphericSimulation.md)):
+- CAPE, CIN, Td, shear, SRH, steering wind, lift boundaries  
+- Active detail near storms; simplified background elsewhere  
 
 ---
 
-# Climate Regions
+# Long-term goals
 
-The map includes realistic climate regions.
-
-Examples:
-- Tornado Alley
-- Gulf Coast
-- Great Plains
-- Rocky Mountains
-- Southwest Desert
-- Great Lakes
-- Pacific Northwest
-
-Each region modifies:
-- humidity
-- heat
-- instability
-- storm potential
-
----
-
-# Atmospheric Simulation Grid
-
-The atmosphere should use region-based simulation rather than full-detail simulation.
-
-Simulation cells store:
-- humidity
-- temperature
-- instability
-- wind
-- pressure
-
-This improves performance and scalability.
-
----
-
-# Active Simulation Philosophy
-
-Only nearby or high-impact regions should receive full simulation detail.
-
-Distant regions use simplified background simulation.
-
----
-
-# Population Simulation
-
-Population should use:
-- regional density systems
-- city population values
-- abstract civilian systems
-
-Avoid simulating individual civilians globally.
-
----
-
-# Destruction Simulation
-
-Destruction should prioritize:
-- major cities
-- visible regions
-- high-impact events
-
-The game should avoid excessive full-scale physics simulation.
-
----
-
-# Seasonal Systems
-
-Potential future seasonal systems:
-- tornado season
-- hurricane season
-- winter storms
-- drought conditions
-
-Seasonal changes affect atmospheric behavior.
-
----
-
-# Long-Term Goals
-
-The map should feel:
-- alive
-- reactive
-- strategic
-- atmospheric
-
-Players should feel like they are controlling and responding to weather across a living United States ecosystem.
+Players feel like they are steering storms across a **living U.S.** — briefing like a forecast office, play like a chaser, recap like a damage survey.

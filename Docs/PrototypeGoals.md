@@ -4,13 +4,17 @@
 
 StormGame should be developed through small playable prototypes.
 
+**Current era:** Storm simulation (S-phases) — see [StormFeaturesImplementationPlan.md](StormFeaturesImplementationPlan.md).
+
 Each prototype should:
 - prove a gameplay concept
 - remain simple
 - be testable quickly
 - avoid unnecessary complexity
 
-The focus is gameplay feel first.
+The focus is **credible storm routing and modes**, not arcade WASD feel.
+
+**Legacy prototypes 1–5** below are largely complete; **prototype 6+** on this page are superseded by S-phases until storm slice ships.
 
 ---
 

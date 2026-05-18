@@ -2,117 +2,102 @@
 
 # Philosophy
 
-Matches should feel:
-- dynamic
-- escalating
-- unpredictable
-- ecosystem-driven
+A **match** is one **calendar day** on the **continental U.S. map** — from **midnight to midnight** — with storms competing for ingredients and **destruction dollars**.
 
-StormGame is not a traditional round-based combat game.
+**Not** round-based arena combat. The ecosystem evolves over simulated time.
 
-Matches evolve naturally through atmospheric simulation.
+**Map & briefing:** [USMapAndZonesDesign.md](USMapAndZonesDesign.md)  
+**Clock & recap:** [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md)  
+**Progression (later):** [PlayerProgressionDesign.md](PlayerProgressionDesign.md)
 
 ---
 
-# Match Phases
+# Match setup
 
-## Phase 1 - Formation
+1. **Lobby:** difficulty, season, date seed, roles (storm / agency), AI fill.  
+2. **CONUS briefing:** general weather outlook + ingredient overlay tabs + **zone occupancy** (multiplayer).  
+3. **Zone pick:** click zone → zoom → see **Storm 👤/🤖** and **Agency 👤/🤖** counts → **confirm zone**.  
+4. **Spawn pick:** **random spawn candidates** in zone → player chooses one.  
+5. **00:00** — day begins; **one active storm** per player (default).
 
-Features:
-- weak atmospheric systems
-- resource gathering
-- early growth
-
-Goal:
-Storm development begins.
+**Multiplayer occupancy:** [BriefingZoneOccupancy.md](BriefingZoneOccupancy.md) — live per-zone counts during briefing only.
 
 ---
 
-## Phase 2 - Development
+# Match phases (within the day)
 
-Features:
-- thunderstorms
-- instability growth
-- increasing competition
+| Clock window | Phase | What happens |
+|--------------|-------|----------------|
+| 00:00–06:00 | **Overnight / morning** | Often weaker CAPE; fog/stratus zones; planning payoff for spawn |
+| 06:00–14:00 | **Diurnal heating** | CAPE builds; boundaries activate |
+| 14:00–20:00 | **Peak severe window** | Best supercell / line potential (zone-dependent) |
+| 20:00–24:00 | **Evening decay** | Storms weaken without fuel; last damage pushes |
 
-Goal:
-Storms begin specializing.
-
----
-
-## Phase 3 - Escalation
-
-Features:
-- severe weather
-- major destruction
-- emergency response
-
-Goal:
-High-intensity ecosystem conflict.
+Exact curves from `DayCycleConfig` + zone + season.
 
 ---
 
-## Phase 4 - Catastrophic Endgame
+# Player rules
 
-Features:
-- maximum storm intensity
-- large-scale disasters
-- major agency response
-
-Goal:
-Final ecosystem climax.
-
----
-
-# Victory Conditions
-
-Different modes may use different win conditions.
+| Rule | Detail |
+|------|--------|
+| **Storms** | **1 active storm** per player at start; multi-storm via skill tree later |
+| **Death** | **Respawn picker** in **original zone** (new random candidates); clock keeps running |
+| **Movement** | Planned path + environmental steering (not WASD) |
+| **Travel** | May leave spawn zone; other zones’ climates apply |
+| **Goal** | Grow severe modes + **max destruction $** before 24:00 |
 
 ---
 
-# Storm Victory Examples
+# Victory & scoring
 
-- highest destruction
-- largest storm
-- longest survival
-- atmospheric dominance
+**Primary (storm era):** highest **total damage ($)** on end-of-day recap.
 
----
+| Secondary stats | Use |
+|-----------------|-----|
+| Peak storm mode | Tie-break, badges |
+| Zones crossed | Explorer XP (future) |
+| Largest single-town $ | Highlight reel |
 
-# Agency Victory Examples
-
-- lowest casualties
-- successful evacuations
-- infrastructure preservation
-- accurate forecasting
+**Agency victory** (low casualties, evacuations) — **deferred** until agency phase.
 
 ---
 
-# Match End Conditions
+# Match end
 
-Potential conditions:
-- time limit
-- total destruction threshold
-- storm dissipation
-- agency success threshold
+| Trigger | Result |
+|---------|--------|
+| **24:00** clock | Mandatory end → **recap screen** |
+| All player storms dead (optional) | AI continues until midnight unless early end voted |
 
----
+### Recap (required)
 
-# AI Integration
+- Leaderboard: **damage $** per **player storm** and **AI storm**  
+- Breakdown: wind / hail / flood / lightning $  
+- CONUS damage heatmap  
 
-AI should:
-- populate ecosystems
-- maintain activity
-- scale challenge naturally
+See [DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md).
 
 ---
 
-# Long-Term Match Goals
+# AI integration
 
-Matches should create:
-- emergent stories
-- unique weather evolution
-- strategic adaptation
-- replayable ecosystems
+- AI uses same **zone spawn**, **outlook-weighted** points, and **one storm** (unless difficulty adds extra AI entities).  
+- Competes for ingredients and destruction $ on recap.
 
-No two matches should feel identical.
+---
+
+# Difficulty
+
+Same CONUS map; [StormDifficultyDesign.md](StormDifficultyDesign.md) scales ingredients and thresholds.
+
+---
+
+# Long-term match types (future)
+
+- **Campaign day chain** — persistent player level  
+- **Ranked season** — fixed seed leagues  
+- **Co-op storms** — shared line building  
+- **Agency vs storm** — asymmetric day (far future)
+
+No two days identical: **season + zone + seed + player routes**.

@@ -6,6 +6,8 @@ Storms should be highly data-driven.
 
 Storm behavior, growth, evolution, and damage should primarily be controlled through configurable values rather than hardcoded logic.
 
+**Field names and units** should match [StormMeteorologyReference.md](StormMeteorologyReference.md) (CAPE, CIN, Td, SRH, etc.).
+
 This allows:
 - easier balancing
 - easier expansion

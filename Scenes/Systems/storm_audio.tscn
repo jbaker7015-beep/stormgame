@@ -6,25 +6,25 @@
 script = ExtResource("1_audio")
 
 [node name="WindPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -8.0
+bus = &"Master"
 
 [node name="RainPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -10.0
+bus = &"Master"
 
 [node name="HumPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -14.0
+bus = &"Master"
 
 [node name="ThunderPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -4.0
+bus = &"Master"
 
 [node name="AIWindPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -12.0
+bus = &"Master"
 
 [node name="AIRainPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -14.0
+bus = &"Master"
 
 [node name="AIHumPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -16.0
+bus = &"Master"
 
 [node name="AIThunderPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -8.0
+bus = &"Master"

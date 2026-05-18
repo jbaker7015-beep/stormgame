@@ -1,91 +1,86 @@
 # Controls Design
 
+**Target controls:** [StormSimulationVision.md](StormSimulationVision.md)  
+**Implementation:** [StormFeaturesImplementationPlan.md](StormFeaturesImplementationPlan.md) — S2, S8, S9
+
+---
+
 # Philosophy
 
 Controls should feel:
-- smooth
-- responsive
-- intuitive
-- scalable across devices
+- **deliberate** and **meteorological** (routing a storm, not driving a ship)
+- readable at map scale
+- scalable to 3D chase camera (S12)
 
-Movement should feel fluid and atmospheric.
+Movement should feel **heavy, slow, and constrained by wind** — not twitch arcade.
+
+---
+
+# Legacy Prototype (being retired)
+
+| Input | Status |
+|-------|--------|
+| WASD movement | **Legacy** — debug only after S2 |
+| Fast acceleration (~280 px/s) | **Legacy** — replaced by trajectory speeds |
+
+---
+
+# Storm Controls (target)
+
+## Trajectory planning (primary — S2)
+
+- **Click + drag** on map to set movement path (waypoints / polyline)
+- **Release** to commit; storm follows at realistic speed
+- **Replan** on cooldown (organization penalty for sharp turns)
+- Actual motion blends **planned path** with **environmental wind** and **cold-pool push**
+
+## Camera (S8)
+
+| Input | Action |
+|-------|--------|
+| Edge scroll / MMB drag | Pan detached camera |
+| Scroll wheel | Zoom |
+| Snap key (e.g. Space / Home) | Return to player storm |
+| Hover storm | Stat panel |
+
+## Day planning (S9 + M1–M5)
+
+- **CONUS briefing:** pan/zoom 2.5D U.S. map, read general outlook
+- **Overlay tabs:** CAPE, CIN, Td, PW, shear, SRH, lift, severe composite
+- **Click zone** (1 of 10) → zoom → zone outlook
+- **Pick spawn** from random weighted candidates in zone
+- Confirm → **00:00** day start ([DayCycleAndRecapDesign.md](DayCycleAndRecapDesign.md))
+- **On death:** respawn picker — new random candidates in **same zone** only; pick one to continue the day
+
+---
+
+# Storm Abilities (future / mode-gated)
+
+Not arcade buttons on cooldown — emergent from structure:
+
+- Hail swath from hail core
+- Gust front / bow acceleration from line mode
+- Tornado from mesocyclone threshold
+
+---
+
+# Agency Controls — DEFERRED
+
+Weather Service / radar / warnings — see [WeatherAgencyDesign.md](WeatherAgencyDesign.md).  
+**No implementation** until storm slice complete.
 
 ---
 
 # Supported Input Types
 
-- keyboard and mouse
-- controller
-- future mobile support
-
----
-
-# Storm Controls
-
-## Basic Movement
-- directional movement
-- altitude adjustments where applicable
-- camera rotation
-
----
-
-## Storm Abilities
-Examples:
-- wind bursts
-- lightning strikes
-- rainfall intensification
-- vortex strengthening
-
-Abilities should remain easy to understand.
-
----
-
-# Agency Controls
-
-Agency gameplay emphasizes:
-- map interaction
-- radar systems
-- warning deployment
-- resource management
-
-Controls should feel strategic rather than action-heavy.
-
----
-
-# Camera Philosophy
-
-Camera should:
-- maintain readability
-- support large-scale storms
-- avoid disorientation
-
-Different storm types may require different camera behaviors.
-
----
-
-# UI Interaction
-
-Menus and radar systems should:
-- remain fast
-- minimize unnecessary clicks
-- support controller navigation
+- keyboard and mouse (primary for trajectory + camera)
+- controller — map later after mouse path works
+- mobile — not planned for storm path drawing v1
 
 ---
 
 # Accessibility Goals
 
-Support:
-- customizable keybinds
-- controller remapping
-- sensitivity settings
-- accessibility-friendly controls
-
----
-
-# Long-Term Goals
-
-Controls should support:
-- fast gameplay
-- large-scale storms
-- multiplayer coordination
-- cinematic weather events
+- Rebind snap-back, overlay toggles, replan key
+- Adjustable camera speed and zoom limits
+- Tooltip jargon explanations on hover stats

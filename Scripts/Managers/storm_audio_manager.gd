@@ -1,15 +1,9 @@
 extends Node
 
-## Storm audio — sample loops when present, procedural fallback otherwise.
+## Storm atmosphere — procedural wind/rain loops + rolling thunder (reliable, no shared WAV streams).
 
 const WeatherFx = preload("res://Scripts/Weather/storm_weather_effects.gd")
-
-const AUDIO_PATHS := {
-	"rain": "res://Audio/rain_loop.wav",
-	"wind": "res://Audio/wind_loop.wav",
-	"hum": "res://Audio/storm_hum_loop.wav",
-	"thunder": "res://Audio/thunder_hit.wav",
-}
+const Synth = preload("res://Scripts/Managers/storm_audio_synth.gd")
 
 @onready var _wind_player: AudioStreamPlayer = $WindPlayer
 @onready var _rain_player: AudioStreamPlayer = $RainPlayer
@@ -27,111 +21,163 @@ var _ai_wind_playback: AudioStreamGeneratorPlayback
 var _ai_rain_playback: AudioStreamGeneratorPlayback
 var _ai_hum_playback: AudioStreamGeneratorPlayback
 
-var _sample_rain: AudioStream
-var _sample_wind: AudioStream
-var _sample_hum: AudioStream
-var _sample_thunder: AudioStream
-var _using_samples: bool = false
-
 var _wind_volume: float = 0.0
 var _rain_volume: float = 0.0
 var _hum_volume: float = 0.0
+var _player_rain_level: float = 0.0
 var _ai_wind_volume: float = 0.0
 var _ai_rain_volume: float = 0.0
 var _ai_hum_volume: float = 0.0
-var _ai_stereo_pan: float = 0.0
 
-var _noise_state: float = 0.0
-var _ai_noise_state: float = 0.35
+var _wind_noise: float = 0.1
+var _rain_noise: float = 0.2
+var _hum_noise: float = 0.05
+var _ai_wind_noise: float = 0.35
+var _ai_rain_noise_state: float = 0.5
+var _ai_hum_noise: float = 0.15
+var _synth_time: float = 0.0
+
+var _generators_ready: bool = false
 
 
 func _ready() -> void:
-	_load_sample_assets()
-	if _using_samples:
-		_setup_loop_player(_rain_player, _sample_rain)
-		_setup_loop_player(_wind_player, _sample_wind)
-		_setup_loop_player(_hum_player, _sample_hum)
-		_setup_loop_player(_ai_rain_player, _sample_rain)
-		_setup_loop_player(_ai_wind_player, _sample_wind)
-		_setup_loop_player(_ai_hum_player, _sample_hum)
-	else:
-		_wind_playback = _start_generator(_wind_player)
-		_rain_playback = _start_generator(_rain_player)
-		_hum_playback = _start_generator(_hum_player)
-		_ai_wind_playback = _start_generator(_ai_wind_player)
-		_ai_rain_playback = _start_generator(_ai_rain_player)
-		_ai_hum_playback = _start_generator(_ai_hum_player)
-
 	_wind_volume = PrototypeBalance.AUDIO_WIND_IDLE
 	GameManager.player_registered.connect(_on_player_registered)
+	call_deferred("_init_generators")
 
 
-func _physics_process(_delta: float) -> void:
+func _init_generators() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_wind_playback = _start_generator(_wind_player)
+	_rain_playback = _start_generator(_rain_player)
+	_hum_playback = _start_generator(_hum_player)
+	_ai_wind_playback = _start_generator(_ai_wind_player)
+	_ai_rain_playback = _start_generator(_ai_rain_player)
+	_ai_hum_playback = _start_generator(_ai_hum_player)
+	_generators_ready = true
+
+
+func _start_generator(player: AudioStreamPlayer) -> AudioStreamGeneratorPlayback:
+	var stream := AudioStreamGenerator.new()
+	stream.mix_rate = Synth.SAMPLE_RATE
+	stream.buffer_length = 0.12
+	player.stream = stream
+	player.bus = &"Master"
+	player.play()
+	var playback: AudioStreamGeneratorPlayback = player.get_stream_playback() as AudioStreamGeneratorPlayback
+	return playback
+
+
+func _physics_process(delta: float) -> void:
+	_synth_time += delta
 	_sync_player_atmosphere()
 	_sync_ai_storm_audio()
 	_apply_output_levels()
 
 
 func _process(_delta: float) -> void:
-	if _using_samples:
+	if not _generators_ready:
 		return
-	_fill_generator(_wind_playback, _wind_volume, 0.4, false, 0.0, true)
-	_fill_generator(_rain_playback, _rain_volume, 0.85, false, 0.0, true)
-	_fill_generator(_hum_playback, _hum_volume, 0.08, true, 0.0, true)
-	_fill_generator(_ai_wind_playback, _ai_wind_volume, 0.38, false, _ai_stereo_pan, false)
-	_fill_generator(_ai_rain_playback, _ai_rain_volume, 0.82, false, _ai_stereo_pan, false)
-	_fill_generator(_ai_hum_playback, _ai_hum_volume, 0.07, true, _ai_stereo_pan, false)
 
-
-func _load_sample_assets() -> void:
-	_sample_rain = _load_audio(AUDIO_PATHS["rain"])
-	_sample_wind = _load_audio(AUDIO_PATHS["wind"])
-	_sample_hum = _load_audio(AUDIO_PATHS["hum"])
-	_sample_thunder = _load_audio(AUDIO_PATHS["thunder"])
-	_using_samples = (
-		_sample_rain != null
-		and _sample_wind != null
-		and _sample_hum != null
-		and _sample_thunder != null
+	_push_wind(_wind_playback, _wind_volume, false)
+	_push_rain(_rain_playback, _player_rain_level, false)
+	_push_hum(_hum_playback, _hum_volume)
+	_push_wind(_ai_wind_playback, _ai_wind_volume, true)
+	_push_rain(_ai_rain_playback, _normalize(_ai_rain_volume, PrototypeBalance.AUDIO_AI_RAIN_MAX), true)
+	_push_hum(
+		_ai_hum_playback,
+		_normalize(_ai_hum_volume, PrototypeBalance.AUDIO_AI_HUM_MAX),
+		true
 	)
 
 
-func _load_audio(path: String) -> AudioStream:
-	if not ResourceLoader.exists(path):
-		return null
-	return load(path) as AudioStream
+func _push_wind(playback: AudioStreamGeneratorPlayback, amp: float, is_ai: bool) -> void:
+	if playback == null or amp <= 0.0005:
+		return
+	var to_fill: int = playback.get_frames_available()
+	for _i in to_fill:
+		var result: Dictionary = Synth.fill_wind_frame(amp, _ai_wind_noise if is_ai else _wind_noise, _synth_time)
+		if is_ai:
+			_ai_wind_noise = result["noise_state"]
+		else:
+			_wind_noise = result["noise_state"]
+		var s: float = result["sample"]
+		playback.push_frame(Vector2(s, s))
 
 
-func _setup_loop_player(player: AudioStreamPlayer, stream: AudioStream) -> void:
-	var loop_stream: AudioStream = stream.duplicate()
-	if loop_stream is AudioStreamWAV:
-		(loop_stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
-	player.stream = loop_stream
-	player.play()
+func _push_rain(
+	playback: AudioStreamGeneratorPlayback,
+	rain_level: float,
+	is_ai: bool = false
+) -> void:
+	if playback == null or rain_level <= 0.0005:
+		return
+	var amp: float = rain_level * (PrototypeBalance.AUDIO_AI_RAIN_MAX if is_ai else PrototypeBalance.AUDIO_RAIN_MAX)
+	var noise_state: float = _ai_rain_noise_state if is_ai else _rain_noise
+	var to_fill: int = playback.get_frames_available()
+	for _i in to_fill:
+		var result: Dictionary = Synth.fill_rain_frame(amp, noise_state, _synth_time)
+		if is_ai:
+			_ai_rain_noise_state = result["noise_state"]
+		else:
+			_rain_noise = result["noise_state"]
+		var s: float = result["sample"]
+		playback.push_frame(Vector2(s, s))
+
+
+func _push_hum(playback: AudioStreamGeneratorPlayback, amp: float, is_ai: bool = false) -> void:
+	if playback == null or amp <= 0.0005:
+		return
+	var noise_state: float = _ai_hum_noise if is_ai else _hum_noise
+	var to_fill: int = playback.get_frames_available()
+	for _i in to_fill:
+		var result: Dictionary = Synth.fill_hum_frame(amp, noise_state, _synth_time)
+		if is_ai:
+			_ai_hum_noise = result["noise_state"]
+		else:
+			_hum_noise = result["noise_state"]
+		var s: float = result["sample"]
+		playback.push_frame(Vector2(s, s))
 
 
 func _apply_output_levels() -> void:
-	if not _using_samples:
-		return
+	var wind_norm: float = _normalize(_wind_volume, PrototypeBalance.AUDIO_WIND_MAX)
+	var rain_norm: float = clampf(_player_rain_level, 0.0, 1.0)
+	var hum_norm: float = _normalize(_hum_volume, PrototypeBalance.AUDIO_HUM_MAX)
 
-	_rain_player.volume_db = _intensity_to_db(_rain_volume, -28.0, -6.0)
-	_wind_player.volume_db = _intensity_to_db(_wind_volume, -32.0, -8.0)
-	_hum_player.volume_db = _intensity_to_db(_hum_volume, -34.0, -12.0)
-	_ai_rain_player.volume_db = _intensity_to_db(_ai_rain_volume, -34.0, -10.0)
-	_ai_wind_player.volume_db = _intensity_to_db(_ai_wind_volume, -36.0, -12.0)
-	_ai_hum_player.volume_db = _intensity_to_db(_ai_hum_volume, -38.0, -14.0)
+	_wind_player.volume_db = maxf(lerpf(-14.0, 2.0, wind_norm), -10.0)
 
-	_apply_stereo_pan(_ai_rain_player, _ai_stereo_pan)
-	_apply_stereo_pan(_ai_wind_player, _ai_stereo_pan)
-	_apply_stereo_pan(_ai_hum_player, _ai_stereo_pan)
+	if rain_norm > 0.01:
+		_rain_player.volume_db = lerpf(-8.0, 6.0, rain_norm)
+	else:
+		_rain_player.volume_db = -55.0
+
+	if hum_norm > 0.015:
+		_hum_player.volume_db = lerpf(-22.0, -6.0, hum_norm)
+	else:
+		_hum_player.volume_db = -50.0
+
+	var ai_wind_norm: float = _normalize(_ai_wind_volume, PrototypeBalance.AUDIO_AI_WIND_MAX)
+	var ai_rain_norm: float = _normalize(_ai_rain_volume, PrototypeBalance.AUDIO_AI_RAIN_MAX)
+	var ai_hum_norm: float = _normalize(_ai_hum_volume, PrototypeBalance.AUDIO_AI_HUM_MAX)
+
+	_ai_wind_player.volume_db = _loop_db(ai_wind_norm, -28.0, -4.0)
+	_ai_rain_player.volume_db = _loop_db(ai_rain_norm, -30.0, -2.0)
+	_ai_hum_player.volume_db = _loop_db(ai_hum_norm, -34.0, -8.0)
 
 
-func _intensity_to_db(amount: float, floor_db: float, ceil_db: float) -> float:
-	return lerpf(floor_db, ceil_db, clampf(amount / 0.14, 0.0, 1.0))
+func _loop_db(normalized: float, silent_db: float, loud_db: float) -> float:
+	if normalized <= 0.01:
+		return silent_db
+	return lerpf(silent_db, loud_db, normalized)
 
 
-func _apply_stereo_pan(player: AudioStreamPlayer, pan: float) -> void:
-	player.panning_strength = clampf(absf(pan), 0.0, 1.0)
+func _normalize(amount: float, max_amount: float) -> float:
+	if max_amount <= 0.0001:
+		return 0.0
+	return clampf(amount / max_amount, 0.0, 1.0)
 
 
 func _on_player_registered(_player: Node2D) -> void:
@@ -143,6 +189,7 @@ func _sync_player_atmosphere() -> void:
 	if stats == null:
 		_wind_volume = PrototypeBalance.AUDIO_WIND_IDLE
 		_rain_volume = 0.0
+		_player_rain_level = 0.0
 		_hum_volume = PrototypeBalance.AUDIO_HUM_IDLE
 		return
 
@@ -150,6 +197,7 @@ func _sync_player_atmosphere() -> void:
 	var storm: float = WeatherFx.compute_storm_intensity(stats)
 	var stage: int = int(stats.get_growth_stage())
 	_apply_player_volumes(rain, storm, stage)
+	_player_rain_level = rain
 
 
 func _sync_ai_storm_audio() -> void:
@@ -158,14 +206,11 @@ func _sync_ai_storm_audio() -> void:
 		_ai_wind_volume = 0.0
 		_ai_rain_volume = 0.0
 		_ai_hum_volume = 0.0
-		_ai_stereo_pan = 0.0
 		return
 
 	var rain_mix: float = 0.0
 	var wind_mix: float = 0.0
 	var hum_mix: float = 0.0
-	var pan_numerator: float = 0.0
-	var pan_weight: float = 0.0
 	var max_stage: int = MoisturePocketStats.GrowthStage.MATURE_THUNDERSTORM
 
 	for storm in AIManager.ai_storms:
@@ -199,20 +244,13 @@ func _sync_ai_storm_audio() -> void:
 		wind_mix += storm_intensity * weight
 		hum_mix += (stage_norm * 0.5 + strength * 0.5) * weight
 
-		var side: float = signf(storm.global_position.x - player.global_position.x)
-		if absf(side) < 0.01:
-			side = 0.0
-		pan_numerator += side * weight
-		pan_weight += weight
-
 	rain_mix = _soft_cap_mix(rain_mix)
 	wind_mix = _soft_cap_mix(wind_mix)
 	hum_mix = _soft_cap_mix(hum_mix)
 
-	_ai_rain_volume = rain_mix * PrototypeBalance.AUDIO_AI_RAIN_MAX
-	_ai_wind_volume = wind_mix * PrototypeBalance.AUDIO_AI_WIND_MAX
+	_ai_rain_volume = rain_mix * PrototypeBalance.AUDIO_AI_RAIN_MAX * 1.4
+	_ai_wind_volume = wind_mix * PrototypeBalance.AUDIO_AI_WIND_MAX * 1.4
 	_ai_hum_volume = hum_mix * PrototypeBalance.AUDIO_AI_HUM_MAX
-	_ai_stereo_pan = clampf(pan_numerator / maxf(pan_weight, 0.0001), -1.0, 1.0)
 
 
 func _apply_player_volumes(
@@ -243,12 +281,7 @@ func _apply_player_volumes(
 
 
 func play_thunder(intensity: float = 1.0) -> void:
-	_play_thunder_on(
-		_thunder_player,
-		intensity,
-		PrototypeBalance.AUDIO_THUNDER_MIN_DB,
-		PrototypeBalance.AUDIO_THUNDER_MAX_DB
-	)
+	_play_rolling_thunder(_thunder_player, intensity, 0.0, -6.0, 6.0)
 
 
 func play_ai_thunder(intensity: float, world_position: Vector2) -> void:
@@ -267,33 +300,20 @@ func play_ai_thunder(intensity: float, world_position: Vector2) -> void:
 		-1.0,
 		1.0
 	)
-	_play_thunder_on(
-		_ai_thunder_player,
-		audible_charge,
-		PrototypeBalance.AUDIO_AI_THUNDER_MIN_DB,
-		PrototypeBalance.AUDIO_AI_THUNDER_MAX_DB,
-		pan
-	)
+	_play_rolling_thunder(_ai_thunder_player, audible_charge, pan, -20.0, -2.0)
 
 
-func _play_thunder_on(
+func _play_rolling_thunder(
 	player: AudioStreamPlayer,
 	intensity: float,
+	stereo_pan: float,
 	min_db: float,
-	max_db: float,
-	stereo_pan: float = 0.0
+	max_db: float
 ) -> void:
 	var charge: float = clampf(intensity, 0.0, 1.0)
-	if player.playing:
-		player.stop()
-
-	if _using_samples and _sample_thunder != null:
-		player.stream = _sample_thunder.duplicate()
-	else:
-		player.stream = _build_thunder_stream(charge, stereo_pan)
-
+	player.stream = Synth.build_rolling_thunder(charge, stereo_pan)
 	player.volume_db = lerpf(min_db, max_db, charge)
-	_apply_stereo_pan(player, stereo_pan)
+	player.pitch_scale = randf_range(0.92, 1.05)
 	player.play()
 
 
@@ -313,73 +333,3 @@ func _soft_cap_mix(value: float) -> float:
 	if value <= cap:
 		return value
 	return cap + (value - cap) * 0.25
-
-
-func _start_generator(player: AudioStreamPlayer) -> AudioStreamGeneratorPlayback:
-	var stream := AudioStreamGenerator.new()
-	stream.mix_rate = 22050
-	stream.buffer_length = 0.12
-	player.stream = stream
-	player.play()
-	return player.get_stream_playback() as AudioStreamGeneratorPlayback
-
-
-func _fill_generator(
-	playback: AudioStreamGeneratorPlayback,
-	volume: float,
-	noise_weight: float,
-	use_tone: bool,
-	stereo_pan: float,
-	use_player_noise: bool
-) -> void:
-	if playback == null or volume <= 0.0001:
-		return
-
-	var noise_state: float = _noise_state if use_player_noise else _ai_noise_state
-	var to_fill: int = playback.get_frames_available()
-	for _i in to_fill:
-		noise_state = fmod(noise_state + noise_weight, 1.0)
-		var noise: float = (randf() * 2.0 - 1.0) * volume
-		if use_tone:
-			var tone: float = sin(noise_state * TAU * 2.0) * volume * 0.35
-			noise = noise * 0.65 + tone
-
-		var pan: float = clampf(stereo_pan, -1.0, 1.0)
-		var left_gain: float = lerpf(1.0, 0.35, maxf(pan, 0.0))
-		var right_gain: float = lerpf(1.0, 0.35, maxf(-pan, 0.0))
-		playback.push_frame(Vector2(noise * left_gain, noise * right_gain))
-
-	if use_player_noise:
-		_noise_state = noise_state
-	else:
-		_ai_noise_state = noise_state
-
-
-func _build_thunder_stream(intensity: float, stereo_pan: float = 0.0) -> AudioStreamWAV:
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = 22050
-	stream.stereo = true
-
-	var duration: float = lerpf(0.28, 0.62, intensity)
-	var sample_count: int = int(22050.0 * duration)
-	var data := PackedByteArray()
-	data.resize(sample_count * 4)
-
-	var pan: float = clampf(stereo_pan, -1.0, 1.0)
-	var left_gain: float = lerpf(1.0, 0.4, maxf(pan, 0.0))
-	var right_gain: float = lerpf(1.0, 0.4, maxf(-pan, 0.0))
-
-	for i in sample_count:
-		var t: float = float(i) / 22050.0
-		var envelope: float = exp(-t * 6.5) * (1.0 - t / duration)
-		var sample_f: float = randf_range(-1.0, 1.0) * envelope * lerpf(0.55, 1.0, intensity)
-		var left_i: int = int(clampf(sample_f * 36000.0 * left_gain, -32000.0, 32000.0))
-		var right_i: int = int(clampf(sample_f * 36000.0 * right_gain, -32000.0, 32000.0))
-		data[i * 4] = left_i & 0xFF
-		data[i * 4 + 1] = (left_i >> 8) & 0xFF
-		data[i * 4 + 2] = right_i & 0xFF
-		data[i * 4 + 3] = (right_i >> 8) & 0xFF
-
-	stream.data = data
-	return stream

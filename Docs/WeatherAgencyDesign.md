@@ -1,5 +1,12 @@
 # Weather Agency System Design
 
+> **STATUS: DEFERRED** — Do not implement until **storm (S0–S12)** and **destruction (D1–D4)** slices are complete.  
+> **Order:** Storms → [DestructionSystem.md](DestructionSystem.md) (route through towns/cities) → **then** Agency.  
+> **Storm work:** [StormSimulationVision.md](StormSimulationVision.md), [StormFeaturesImplementationPlan.md](StormFeaturesImplementationPlan.md)  
+> This document is kept for long-term asymmetric multiplayer design only.
+
+---
+
 ## Overview
 
 StormGame includes an asymmetric multiplayer role called the Weather Agency.
@@ -14,6 +21,23 @@ Instead, they reduce destruction through:
 - infrastructure protection
 
 This creates a realistic weather ecosystem where storms evolve naturally while weather agencies attempt to minimize damage and save lives.
+
+---
+
+# Briefing — zone selection (multiplayer)
+
+Agency players use the **same CONUS briefing** as storms ([USMapAndZonesDesign.md](USMapAndZonesDesign.md)).
+
+| Display | Meaning |
+|---------|---------|
+| **Agency 👤** | Human agency players who committed to operate in this zone |
+| **Agency 🤖** | AI agency slots in this zone |
+
+Storm players see **Agency** counts alongside **Storm 👤/🤖** when picking a zone ([BriefingZoneOccupancy.md](BriefingZoneOccupancy.md)).
+
+Agency commits an **operational zone** during briefing (before **00:00**), same commit rules as storms — no exact HQ coordinates revealed to enemies until play.
+
+**Implementation:** Occupancy UI and network fields ship in **M7**; agency gameplay later.
 
 ---
 

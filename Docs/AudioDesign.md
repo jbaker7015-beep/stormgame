@@ -4,6 +4,10 @@
 
 Audio is critical to StormGame.
 
+**Target:** **Recorded** field audio (wind, rain, hail, thunder) — not procedural buzz.  
+**Plan:** [StormFeaturesImplementationPlan.md](StormFeaturesImplementationPlan.md) — **S7**  
+**Lightning sync:** IC forks + occasional CG — **S6**
+
 Storms should sound:
 - alive
 - evolving
@@ -12,7 +16,9 @@ Storms should sound:
 
 Players should be able to hear storm intensity increasing even without looking directly at the storm.
 
-The audio experience should feel cinematic and immersive.
+The audio experience should feel **documentary-real**, not synthetic arcade.
+
+**Prototype note:** Procedural synth in `storm_audio_synth.gd` is a **dev fallback** until S7 ships.
 
 ---
 
@@ -117,15 +123,10 @@ Late gameplay:
 
 ---
 
-# Agency Audio Design
+# Agency Audio Design — DEFERRED
 
-Weather agency gameplay should include:
-- radar beeps
-- communication chatter
-- alert systems
-- emergency dispatch audio
-
-Agency gameplay should feel like a real disaster response operation.
+Weather agency audio (radar, alerts, dispatch) ships with **Weather Service gameplay** — far future.  
+Storms-first: see [StormSimulationVision.md](StormSimulationVision.md).
 
 ---
 
