@@ -103,3 +103,24 @@ const AI_STORM_COMPETE_PENALTY: float = 14.0
 const AI_WEATHER_DROP_RADIUS: float = 130.0
 const AI_WEATHER_RAIN_MULT: float = 0.92
 const AI_WEATHER_WIND_MULT: float = 0.88
+
+# --- Storm audio (player progression) ---
+const AUDIO_WIND_IDLE: float = 0.018
+const AUDIO_WIND_MAX: float = 0.11
+const AUDIO_RAIN_MAX: float = 0.14
+const AUDIO_HUM_IDLE: float = 0.006
+const AUDIO_HUM_MAX: float = 0.048
+const AUDIO_HUM_COMBINED_BOOST: float = 0.022
+const AUDIO_THUNDER_MIN_DB: float = -2.0
+const AUDIO_THUNDER_MAX_DB: float = 4.0
+
+# --- Rival storm audio (distance + strength) ---
+const AUDIO_AI_MAX_HEAR_DISTANCE: float = 520.0
+const AUDIO_AI_FULL_HEAR_DISTANCE: float = 110.0
+const AUDIO_AI_PAN_RANGE: float = 280.0
+const AUDIO_AI_MIX_CAP: float = 0.9
+const AUDIO_AI_RAIN_MAX: float = 0.085
+const AUDIO_AI_WIND_MAX: float = 0.07
+const AUDIO_AI_HUM_MAX: float = 0.03
+const AUDIO_AI_THUNDER_MIN_DB: float = -20.0
+const AUDIO_AI_THUNDER_MAX_DB: float = -5.0

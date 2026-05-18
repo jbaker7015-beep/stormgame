@@ -12,7 +12,6 @@ extends Node2D
 
 var _storm_body: CharacterBody2D = null
 var _stats: MoisturePocketStats = null
-var _is_player_storm: bool = false
 var _wind_vector: Vector2 = Vector2.ZERO
 var _wind_angle: float = 0.0
 var _rain_intensity: float = 0.0
@@ -29,22 +28,29 @@ func _ready() -> void:
 		return
 
 	_stats = _storm_body.get_node_or_null("Stats") as MoisturePocketStats
-	_is_player_storm = _storm_body.is_in_group("player_storm")
 	_wind_phase_offset = randf() * TAU
 
+	call_deferred("_finalize_storm_binding")
+
+
+func _finalize_storm_binding() -> void:
 	_configure_layers_for_storm_type()
 	_reset_lightning_visuals()
 
-	if not _is_player_storm:
+	if not is_player_storm():
 		_visuals.set_drop_zone_radius(PrototypeBalance.AI_WEATHER_DROP_RADIUS)
+
+
+func is_player_storm() -> bool:
+	return _storm_body != null and _storm_body == GameManager.player
 
 
 func _configure_layers_for_storm_type() -> void:
 	_rain_tint.visible = false
 	_rain_tint.modulate.a = 0.0
-	$RainOverlayLayer.visible = _is_player_storm
-	$LightningLayer.visible = _is_player_storm
-	$LocalLightning.visible = not _is_player_storm
+	$RainOverlayLayer.visible = is_player_storm()
+	$LightningLayer.visible = is_player_storm()
+	$LocalLightning.visible = not is_player_storm()
 
 
 func _reset_lightning_visuals() -> void:
@@ -63,13 +69,10 @@ func _physics_process(delta: float) -> void:
 		_apply_visuals(0.0, 0.0)
 		return
 
-	var storm_intensity: float = _get_storm_intensity()
+	var storm_intensity: float = compute_storm_intensity(_stats)
 	_update_wind(delta, storm_intensity)
-	_rain_intensity = _get_rain_intensity()
+	_rain_intensity = compute_rain_intensity(_stats, not is_player_storm())
 	_apply_visuals(_rain_intensity, storm_intensity)
-
-	if _is_player_storm:
-		_update_audio(_rain_intensity, storm_intensity)
 
 	_update_lightning(delta)
 	_update_flash(delta)
@@ -83,9 +86,9 @@ func get_bound_storm() -> CharacterBody2D:
 	return _storm_body
 
 
-func _get_storm_intensity() -> float:
+static func compute_storm_intensity(stats: MoisturePocketStats) -> float:
 	return clampf(
-		_stats.get_energy_ratio() * 0.5 + _stats.get_instability_ratio() * 0.5,
+		stats.get_energy_ratio() * 0.5 + stats.get_instability_ratio() * 0.5,
 		0.0,
 		1.0
 	)
@@ -99,15 +102,15 @@ func _update_wind(delta: float, intensity: float) -> void:
 		PrototypeBalance.WIND_STRENGTH_MAX,
 		intensity
 	)
-	if not _is_player_storm:
+	if not is_player_storm():
 		strength *= PrototypeBalance.AI_WEATHER_WIND_MULT
 	_wind_vector = Vector2(cos(_wind_angle), sin(_wind_angle)) * strength
 
 
-func _get_rain_intensity() -> float:
-	var humidity: float = _stats.humidity
-	var energy: float = _stats.storm_energy
-	var instability: float = _stats.instability
+static func compute_rain_intensity(stats: MoisturePocketStats, apply_ai_scale: bool) -> float:
+	var humidity: float = stats.humidity
+	var energy: float = stats.storm_energy
+	var instability: float = stats.instability
 
 	if energy < PrototypeBalance.RAIN_MIN_ENERGY:
 		return 0.0
@@ -133,7 +136,7 @@ func _get_rain_intensity() -> float:
 
 	var moisture_factor: float = maxf(humidity_ready, instability_ready * 0.85)
 	var rain: float = minf(energy_ready, moisture_factor)
-	if not _is_player_storm:
+	if apply_ai_scale:
 		rain *= PrototypeBalance.AI_WEATHER_RAIN_MULT
 	return rain
 
@@ -141,17 +144,12 @@ func _get_rain_intensity() -> float:
 func _apply_visuals(rain: float, storm_intensity: float) -> void:
 	_visuals.set_weather(rain, _wind_vector, storm_intensity)
 
-	if not _is_player_storm:
+	if not is_player_storm():
 		return
 
 	var show_tint: bool = rain > 0.08
 	_rain_tint.visible = show_tint
 	_rain_tint.modulate = Color(0.72, 0.82, 0.98, lerpf(0.0, 0.22, rain))
-
-
-func _update_audio(rain: float, storm_intensity: float) -> void:
-	var stage: int = _stats.get_growth_stage()
-	StormAudioManager.update_atmosphere(rain, storm_intensity, stage)
 
 
 func _update_lightning(delta: float) -> void:
@@ -171,7 +169,7 @@ func _update_lightning(delta: float) -> void:
 		0.0,
 		1.0
 	)
-	var strike_chance: float = charge * (0.04 if _is_player_storm else 0.028)
+	var strike_chance: float = charge * (0.04 if is_player_storm() else 0.028)
 	if randf() > strike_chance:
 		return
 
@@ -182,19 +180,18 @@ func _trigger_lightning(charge: float) -> void:
 	_flash_timer = PrototypeBalance.LIGHTNING_FLASH_DURATION
 	_flash_peak_alpha = PrototypeBalance.LIGHTNING_FLASH_ALPHA * charge
 
-	if _is_player_storm:
+	if is_player_storm():
 		_trigger_screen_lightning(charge)
+		StormAudioManager.play_thunder(charge)
 	else:
 		_trigger_local_lightning(charge)
+		StormAudioManager.play_ai_thunder(charge, _storm_body.global_position)
 
 	_lightning_cooldown = lerpf(
 		PrototypeBalance.LIGHTNING_COOLDOWN_MAX,
 		PrototypeBalance.LIGHTNING_COOLDOWN_MIN,
 		charge
 	)
-
-	if _is_player_storm:
-		StormAudioManager.play_thunder(charge)
 
 
 func _trigger_screen_lightning(charge: float) -> void:
@@ -237,7 +234,7 @@ func _update_flash(delta: float) -> void:
 	var alpha_scale: float = _flash_timer / PrototypeBalance.LIGHTNING_FLASH_DURATION
 	var faded_alpha: float = _flash_peak_alpha * alpha_scale
 
-	if _is_player_storm and _flash.visible:
+	if is_player_storm() and _flash.visible:
 		_flash.modulate.a = faded_alpha
 	elif _local_flash.visible:
 		_local_flash.modulate.a = faded_alpha * 0.85

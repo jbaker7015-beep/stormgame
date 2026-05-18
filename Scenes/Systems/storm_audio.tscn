@@ -16,3 +16,15 @@ volume_db = -14.0
 
 [node name="ThunderPlayer" type="AudioStreamPlayer" parent="."]
 volume_db = -4.0
+
+[node name="AIWindPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -12.0
+
+[node name="AIRainPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -14.0
+
+[node name="AIHumPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -16.0
+
+[node name="AIThunderPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0
