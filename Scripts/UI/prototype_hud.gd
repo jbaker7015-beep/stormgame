@@ -62,14 +62,16 @@ func _on_growth_stage_changed(stage: int) -> void:
 
 func _on_evolution_progress_changed(progress: float, next_label: String) -> void:
 	_evolution_bar.value = progress * 100.0
-	if progress >= 0.999 and next_label.contains("future"):
-		_evolution_label.text = "Evolution: Developing Thunderstorm (peak)"
+	if progress >= 0.999 and next_label.contains("Peak"):
+		_evolution_label.text = "Evolution: %s" % next_label
 	else:
 		_evolution_label.text = "Toward %s: %d%%" % [next_label, int(progress * 100.0)]
 
 
 func _apply_stage_color(stage: int) -> void:
 	match stage:
+		MoisturePocketStats.GrowthStage.MATURE_THUNDERSTORM:
+			_stage_label.modulate = Color(0.72, 0.68, 1.0)
 		MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
 			_stage_label.modulate = Color(0.82, 0.78, 1.0)
 		MoisturePocketStats.GrowthStage.CUMULUS_CLOUD:
@@ -106,8 +108,10 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 	var in_heat: bool = stats != null and stats.is_in_heat_zone()
 	var stage: int = stats.get_growth_stage() if stats != null else 0
 
-	if stage == MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
-		_hint_label.text = "Developing Thunderstorm — peak stage! Heavy rain, wind, thunder audio."
+	if stage == MoisturePocketStats.GrowthStage.MATURE_THUNDERSTORM:
+		_hint_label.text = "Mature Thunderstorm — peak power! Severe rain, wind, lightning, and hail aura."
+	elif stage == MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
+		_hint_label.text = "Developing Thunderstorm — push stats to reach Mature Thunderstorm."
 	elif stage == MoisturePocketStats.GrowthStage.CUMULUS_CLOUD:
 		_hint_label.text = "Cumulus Cloud — push energy, instability, and humidity to evolve further."
 	elif stage == MoisturePocketStats.GrowthStage.UPDRAFT_FORMING:

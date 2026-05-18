@@ -44,6 +44,11 @@ visible = false
 color = Color(0.75, 0.62, 0.58, 0.45)
 polygon = PackedVector2Array(-48, -4, -36, -38, 0, -48, 36, -38, 48, -4, 42, 28, 0, 46, -42, 28)
 
+[node name="MatureAura" type="Polygon2D" parent="VisualRoot"]
+visible = false
+color = Color(0.72, 0.55, 0.5, 0.38)
+polygon = PackedVector2Array(-62, 0, -48, -48, 0, -62, 48, -48, 62, 0, 48, 48, 0, 62, -48, 48)
+
 [node name="OuterHalo" type="Polygon2D" parent="VisualRoot"]
 color = Color(0.72, 0.55, 0.48, 0.35)
 polygon = PackedVector2Array(-30, 0, -22, -22, 0, -30, 22, -22, 30, 0, 22, 22, 0, 30, -22, 22)

@@ -9,10 +9,17 @@ enum Stage {
 	WARM_UPDRAFT,
 	CUMULUS_CLOUD,
 	DEVELOPING_THUNDERSTORM,
+	MATURE_THUNDERSTORM,
 }
 
 
 static func evaluate_stage(energy: float, instability: float, humidity: float) -> Stage:
+	if (
+		energy >= PrototypeBalance.MATURE_ENERGY
+		and instability >= PrototypeBalance.MATURE_INSTABILITY
+		and humidity >= PrototypeBalance.MATURE_HUMIDITY
+	):
+		return Stage.MATURE_THUNDERSTORM
 	if (
 		energy >= PrototypeBalance.THUNDERSTORM_ENERGY
 		and instability >= PrototypeBalance.THUNDERSTORM_INSTABILITY
@@ -47,6 +54,8 @@ static func get_stage_label(stage: Stage) -> String:
 			return "Cumulus Cloud"
 		Stage.DEVELOPING_THUNDERSTORM:
 			return "Developing Thunderstorm"
+		Stage.MATURE_THUNDERSTORM:
+			return "Mature Thunderstorm"
 		_:
 			return "Moisture Pocket"
 
@@ -61,13 +70,15 @@ static func get_next_stage(stage: Stage) -> Stage:
 			return Stage.CUMULUS_CLOUD
 		Stage.CUMULUS_CLOUD:
 			return Stage.DEVELOPING_THUNDERSTORM
+		Stage.DEVELOPING_THUNDERSTORM:
+			return Stage.MATURE_THUNDERSTORM
 		_:
-			return Stage.DEVELOPING_THUNDERSTORM
+			return Stage.MATURE_THUNDERSTORM
 
 
 static func get_next_stage_label(stage: Stage) -> String:
-	if stage == Stage.DEVELOPING_THUNDERSTORM:
-		return "Mature Thunderstorm (future)"
+	if stage == Stage.MATURE_THUNDERSTORM:
+		return "Peak storm mastery"
 	return get_stage_label(get_next_stage(stage))
 
 
@@ -77,7 +88,7 @@ static func get_progress_toward_next(
 	instability: float,
 	humidity: float
 ) -> float:
-	if stage == Stage.DEVELOPING_THUNDERSTORM:
+	if stage == Stage.MATURE_THUNDERSTORM:
 		return 1.0
 
 	var next: Stage = get_next_stage(stage)
@@ -109,6 +120,14 @@ static func get_progress_toward_next(
 				),
 				clampf(humidity / PrototypeBalance.THUNDERSTORM_HUMIDITY, 0.0, 1.0)
 			)
+		Stage.MATURE_THUNDERSTORM:
+			return minf(
+				minf(
+					clampf(energy / PrototypeBalance.MATURE_ENERGY, 0.0, 1.0),
+					clampf(instability / PrototypeBalance.MATURE_INSTABILITY, 0.0, 1.0)
+				),
+				clampf(humidity / PrototypeBalance.MATURE_HUMIDITY, 0.0, 1.0)
+			)
 		_:
 			return 0.0
 
@@ -124,6 +143,7 @@ static func get_visual_preset(stage: Stage) -> Dictionary:
 				"mist_mult": 1.0,
 				"show_cumulus_puff": false,
 				"show_thunder_glow": false,
+				"show_mature_aura": false,
 			}
 		Stage.UNSTABLE_AIR:
 			return {
@@ -134,6 +154,7 @@ static func get_visual_preset(stage: Stage) -> Dictionary:
 				"mist_mult": 1.15,
 				"show_cumulus_puff": false,
 				"show_thunder_glow": false,
+				"show_mature_aura": false,
 			}
 		Stage.WARM_UPDRAFT:
 			return {
@@ -144,6 +165,7 @@ static func get_visual_preset(stage: Stage) -> Dictionary:
 				"mist_mult": 1.3,
 				"show_cumulus_puff": false,
 				"show_thunder_glow": false,
+				"show_mature_aura": false,
 			}
 		Stage.CUMULUS_CLOUD:
 			return {
@@ -154,6 +176,7 @@ static func get_visual_preset(stage: Stage) -> Dictionary:
 				"mist_mult": 1.55,
 				"show_cumulus_puff": true,
 				"show_thunder_glow": false,
+				"show_mature_aura": false,
 			}
 		Stage.DEVELOPING_THUNDERSTORM:
 			return {
@@ -164,6 +187,18 @@ static func get_visual_preset(stage: Stage) -> Dictionary:
 				"mist_mult": 1.75,
 				"show_cumulus_puff": true,
 				"show_thunder_glow": true,
+				"show_mature_aura": false,
+			}
+		Stage.MATURE_THUNDERSTORM:
+			return {
+				"core_color": Color(0.68, 0.72, 0.98, 0.98),
+				"halo_color": Color(0.48, 0.52, 0.88, 0.82),
+				"scale_mult": 1.62,
+				"halo_mult": 1.72,
+				"mist_mult": 1.95,
+				"show_cumulus_puff": true,
+				"show_thunder_glow": true,
+				"show_mature_aura": true,
 			}
 		_:
 			return get_visual_preset(Stage.MOISTURE_POCKET)

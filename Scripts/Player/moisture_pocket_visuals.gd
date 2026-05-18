@@ -8,6 +8,7 @@ const EvoData = preload("res://Systems/Data/evolution_stage_data.gd")
 @onready var _outer_halo: Polygon2D = $OuterHalo
 @onready var _cumulus_puff: Polygon2D = $CumulusPuff
 @onready var _thunder_glow: Polygon2D = $ThunderGlow
+@onready var _mature_aura: Polygon2D = $MatureAura
 @onready var _core: Polygon2D = $Core
 @onready var _mist: CPUParticles2D = $MistParticles
 @onready var _updraft: CPUParticles2D = $UpdraftParticles
@@ -96,6 +97,13 @@ func _apply_stage_visuals(
 	if _thunder_glow.visible:
 		var pulse: float = 0.65 + sin(_pulse_time * 8.0) * 0.2
 		_thunder_glow.modulate = Color(0.75, 0.7, 1.0, pulse * resource_blend)
+
+	var show_mature: bool = preset.get("show_mature_aura", false)
+	_mature_aura.visible = show_mature
+	if show_mature:
+		var mature_pulse: float = 0.55 + sin(_pulse_time * 5.0) * 0.25
+		_mature_aura.modulate = Color(0.62, 0.58, 0.95, mature_pulse * resource_blend)
+		_mature_aura.scale = Vector2.ONE * lerpf(1.05, 1.22, resource_blend)
 
 	var mist_mult: float = preset.get("mist_mult", 1.0)
 	_mist.amount = maxi(1, int(lerpf(10.0, 40.0, resource_blend) * mist_mult))

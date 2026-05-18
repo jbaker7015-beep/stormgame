@@ -1,12 +1,14 @@
-[gd_scene load_steps=6 format=3 uid="uid://storm_prototype_world"]
+[gd_scene load_steps=7 format=3 uid="uid://storm_prototype_world"]
 
 [ext_resource type="Script" path="res://Scripts/World/biome_map_overlay.gd" id="1_map"]
-[ext_resource type="Script" path="res://Scripts/World/ai_ecosystem_spawner.gd" id="6_spawner"]
-[ext_resource type="PackedScene" uid="uid://storm_moisture_pocket" path="res://Scenes/Storms/moisture_pocket.tscn" id="2_pocket"]
-[ext_resource type="PackedScene" uid="uid://storm_atmospheric_zone" path="res://Scenes/World/atmospheric_zone.tscn" id="3_zone"]
-[ext_resource type="PackedScene" uid="uid://storm_prototype_hud" path="res://Scenes/UI/prototype_hud.tscn" id="4_hud"]
+[ext_resource type="Script" path="res://Scripts/World/ai_ecosystem_spawner.gd" id="2_spawner"]
+[ext_resource type="Script" path="res://Scripts/World/world_zone_spawner.gd" id="3_zones"]
+[ext_resource type="Script" path="res://Scripts/World/world_camera_setup.gd" id="4_camera_setup"]
+[ext_resource type="PackedScene" uid="uid://storm_moisture_pocket" path="res://Scenes/Storms/moisture_pocket.tscn" id="5_pocket"]
+[ext_resource type="PackedScene" uid="uid://storm_prototype_hud" path="res://Scenes/UI/prototype_hud.tscn" id="6_hud"]
 
 [node name="PrototypeWorld" type="Node2D"]
+script = ExtResource("4_camera_setup")
 
 [node name="SkyLayer" type="CanvasLayer" parent="."]
 layer = -10
@@ -18,18 +20,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.45, 0.62, 0.82, 1)
+color = Color(0.42, 0.6, 0.8, 1)
 
 [node name="GroundTint" type="ColorRect" parent="SkyLayer"]
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -180.0
+offset_top = -200.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
-color = Color(0.32, 0.48, 0.35, 0.55)
+color = Color(0.3, 0.46, 0.34, 0.5)
 
 [node name="World" type="Node2D" parent="."]
 
@@ -38,12 +40,12 @@ z_index = -2
 script = ExtResource("1_map")
 
 [node name="AmbientMist" type="CPUParticles2D" parent="World"]
-position = Vector2(640, 360)
-amount = 48
-lifetime = 4.0
+position = Vector2(1280, 720)
+amount = 72
+lifetime = 5.0
 preprocess = 2.0
 emission_shape = 3
-emission_rect_extents = Vector2(720, 420)
+emission_rect_extents = Vector2(1280, 720)
 direction = Vector2(0.2, -0.4)
 spread = 40.0
 gravity = Vector2(0, 0)
@@ -51,38 +53,17 @@ initial_velocity_min = 6.0
 initial_velocity_max = 18.0
 scale_amount_min = 0.5
 scale_amount_max = 1.2
-color = Color(0.85, 0.92, 1, 0.12)
+color = Color(0.85, 0.92, 1, 0.1)
 
-[node name="Ocean" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(220, 320)
-biome = 0
+[node name="BiomeZones" type="Node2D" parent="World"]
+script = ExtResource("3_zones")
 
-[node name="Lake" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(520, 520)
-biome = 1
-
-[node name="River" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(980, 380)
-biome = 2
-
-[node name="City" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(700, 480)
-biome = 3
-
-[node name="Plains" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(860, 180)
-biome = 4
-
-[node name="Forest" parent="World" instance=ExtResource("3_zone")]
-position = Vector2(420, 200)
-biome = 5
-
-[node name="MoisturePocket" parent="World" instance=ExtResource("2_pocket")]
-position = Vector2(640, 360)
+[node name="MoisturePocket" parent="World" instance=ExtResource("5_pocket")]
+position = Vector2(1280, 720)
 
 [node name="AIEcosystem" type="Node2D" parent="World"]
-script = ExtResource("6_spawner")
+script = ExtResource("2_spawner")
 
 [node name="HUDLayer" type="CanvasLayer" parent="."]
 
-[node name="PrototypeHUD" parent="HUDLayer" instance=ExtResource("4_hud")]
+[node name="PrototypeHUD" parent="HUDLayer" instance=ExtResource("6_hud")]

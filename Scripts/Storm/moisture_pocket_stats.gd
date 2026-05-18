@@ -11,6 +11,7 @@ enum GrowthStage {
 	UPDRAFT_FORMING,
 	CUMULUS_CLOUD,
 	DEVELOPING_THUNDERSTORM,
+	MATURE_THUNDERSTORM,
 }
 
 signal stats_changed(
@@ -134,6 +135,8 @@ func _to_data_stage(stage: GrowthStage) -> int:
 			return EvoData.Stage.CUMULUS_CLOUD
 		GrowthStage.DEVELOPING_THUNDERSTORM:
 			return EvoData.Stage.DEVELOPING_THUNDERSTORM
+		GrowthStage.MATURE_THUNDERSTORM:
+			return EvoData.Stage.MATURE_THUNDERSTORM
 		_:
 			return EvoData.Stage.MOISTURE_POCKET
 
@@ -148,6 +151,8 @@ func _from_data_stage(stage: int) -> GrowthStage:
 			return GrowthStage.CUMULUS_CLOUD
 		EvoData.Stage.DEVELOPING_THUNDERSTORM:
 			return GrowthStage.DEVELOPING_THUNDERSTORM
+		EvoData.Stage.MATURE_THUNDERSTORM:
+			return GrowthStage.MATURE_THUNDERSTORM
 		_:
 			return GrowthStage.MOISTURE_POCKET
 
@@ -175,6 +180,8 @@ func _apply_zone_collection(delta: float) -> void:
 		humidity_mult = PrototypeBalance.CUMULUS_HUMIDITY_MULT
 	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
 		humidity_mult = PrototypeBalance.CUMULUS_HUMIDITY_MULT * 1.05
+	elif _growth_stage == GrowthStage.MATURE_THUNDERSTORM:
+		humidity_mult = PrototypeBalance.MATURE_HUMIDITY_MULT
 
 	if _zone_humidity_rate > 0.0:
 		add_humidity(_zone_humidity_rate * humidity_mult * delta)
@@ -210,6 +217,8 @@ func _update_instability(delta: float) -> void:
 		inst_mult = PrototypeBalance.UNSTABLE_INSTABILITY_MULT
 	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
 		inst_mult = PrototypeBalance.THUNDERSTORM_INSTABILITY_MULT
+	elif _growth_stage == GrowthStage.MATURE_THUNDERSTORM:
+		inst_mult = PrototypeBalance.MATURE_INSTABILITY_MULT
 
 	if synergy >= PrototypeBalance.INSTABILITY_SYNERGY_MIN:
 		instability += (
@@ -242,6 +251,8 @@ func _update_storm_energy(delta: float) -> void:
 		energy_mult = PrototypeBalance.CUMULUS_ENERGY_MULT
 	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
 		energy_mult = PrototypeBalance.THUNDERSTORM_ENERGY_MULT
+	elif _growth_stage == GrowthStage.MATURE_THUNDERSTORM:
+		energy_mult = PrototypeBalance.MATURE_ENERGY_MULT
 
 	var blend: float = minf(humidity, heat_energy) / PrototypeBalance.MAX_HUMIDITY
 	var instability_boost: float = 1.0 + get_instability_ratio() * PrototypeBalance.ENERGY_INSTABILITY_BOOST

@@ -4,16 +4,14 @@ extends Node2D
 
 const AI_POCKET_SCENE: PackedScene = preload("res://Scenes/Storms/ai_moisture_pocket.tscn")
 
-@export var spawn_positions: Array[Vector2] = [
-	Vector2(420, 440),
-	Vector2(920, 260),
-	Vector2(540, 280),
-]
+@export var spawn_positions: Array[Vector2] = []
 
 @export var ai_names: Array[String] = ["AI Alpha", "AI Beta", "AI Gamma"]
 
 
 func _ready() -> void:
+	if spawn_positions.is_empty():
+		spawn_positions = WorldMapConfig.AI_SPAWN_POSITIONS.duplicate()
 	call_deferred("_spawn_ai_storms")
 
 
