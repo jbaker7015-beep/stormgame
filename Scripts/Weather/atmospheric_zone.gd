@@ -22,6 +22,7 @@ func _ready() -> void:
 	_load_preset()
 	_setup_shape()
 	_apply_zone_theme()
+	collision_mask = PrototypeBalance.STORM_BODY_COLLISION_MASK
 	WeatherManager.register_zone(self)
 	monitoring = true
 	body_entered.connect(_on_body_entered)
@@ -80,6 +81,10 @@ func _on_body_exited(body: Node2D) -> void:
 	if stats == null:
 		return
 	stats.remove_zone_contribution(_humidity_rate, _heat_rate, _instability_rate, _display_name)
+
+
+func get_contribution_rates() -> Vector3:
+	return Vector3(_humidity_rate, _heat_rate, _instability_rate)
 
 
 func _get_stats_from_body(body: Node2D) -> Node:

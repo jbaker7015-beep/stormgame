@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://storm_audio_root"]
+
+[ext_resource type="Script" path="res://Scripts/Managers/storm_audio_manager.gd" id="1_audio"]
+
+[node name="StormAudio" type="Node"]
+script = ExtResource("1_audio")
+
+[node name="WindPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0
+
+[node name="RainPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -10.0
+
+[node name="HumPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -14.0
+
+[node name="ThunderPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -4.0

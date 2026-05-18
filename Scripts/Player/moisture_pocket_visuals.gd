@@ -1,22 +1,24 @@
 extends Node2D
 
-## Cloud growth visuals — layered halo, mist, updraft shimmer (Prototype Phase 2).
+## Per-stage cloud visuals and growth scaling (Prototype Phase 4).
+
+const EvoData = preload("res://Systems/Data/evolution_stage_data.gd")
 
 @onready var _stats: Node = get_parent().get_node("Stats")
 @onready var _outer_halo: Polygon2D = $OuterHalo
+@onready var _cumulus_puff: Polygon2D = $CumulusPuff
+@onready var _thunder_glow: Polygon2D = $ThunderGlow
 @onready var _core: Polygon2D = $Core
 @onready var _mist: CPUParticles2D = $MistParticles
 @onready var _updraft: CPUParticles2D = $UpdraftParticles
 
-var _base_core_color: Color
-var _base_halo_color: Color
 var _pulse_time: float = 0.0
+var _transition_boost: float = 0.0
 
 
 func _ready() -> void:
-	_base_core_color = _core.color
-	_base_halo_color = _outer_halo.color
 	_stats.stats_changed.connect(_on_stats_changed)
+	_stats.growth_stage_changed.connect(_on_growth_stage_changed)
 	_on_stats_changed(
 		_stats.humidity,
 		_stats.heat_energy,
@@ -27,6 +29,9 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_pulse_time += delta
+	if _transition_boost > 0.0:
+		_transition_boost = maxf(_transition_boost - delta * 2.5, 0.0)
+
 	var instability_ratio: float = _stats.get_instability_ratio()
 	if instability_ratio < 0.08:
 		_outer_halo.modulate = Color.WHITE
@@ -36,40 +41,67 @@ func _process(delta: float) -> void:
 	_outer_halo.modulate = Color(1.15 * pulse, 1.05, 1.2 * pulse, 1.0)
 
 
+func _on_growth_stage_changed(_stage: int) -> void:
+	_transition_boost = 0.35
+	_apply_stage_visuals()
+
+
 func _on_stats_changed(
 	_humidity: float,
 	_heat: float,
 	storm_energy: float,
 	instability: float
 ) -> void:
+	_apply_stage_visuals(storm_energy, instability)
+
+
+func _apply_stage_visuals(
+	storm_energy: float = -1.0,
+	instability: float = -1.0
+) -> void:
+	if storm_energy < 0.0:
+		storm_energy = _stats.storm_energy
+	if instability < 0.0:
+		instability = _stats.instability
+
+	var data_stage: int = EvoData.evaluate_stage(
+		_stats.storm_energy,
+		_stats.instability,
+		_stats.humidity
+	)
+	var preset: Dictionary = EvoData.get_visual_preset(data_stage)
+
 	var energy_ratio: float = storm_energy / PrototypeBalance.MAX_STORM_ENERGY
 	var instability_ratio: float = instability / PrototypeBalance.MAX_INSTABILITY
-	var growth_blend: float = clampf(energy_ratio * 0.7 + instability_ratio * 0.3, 0.0, 1.0)
+	var resource_blend: float = clampf(energy_ratio * 0.5 + instability_ratio * 0.5, 0.0, 1.0)
 
-	var scale_value: float = lerpf(
+	var scale_mult: float = preset.get("scale_mult", 1.0)
+	var halo_mult: float = preset.get("halo_mult", 1.0)
+	var base_scale: float = lerpf(
 		PrototypeBalance.MIN_VISUAL_SCALE,
 		PrototypeBalance.MAX_VISUAL_SCALE,
-		growth_blend
+		resource_blend
 	)
-	scale = Vector2.ONE * scale_value
+	scale = Vector2.ONE * base_scale * scale_mult * (1.0 + _transition_boost)
 
-	var halo_scale: float = lerpf(1.0, PrototypeBalance.HALO_SCALE_MULTIPLIER, growth_blend)
-	_outer_halo.scale = Vector2.ONE * halo_scale
+	_outer_halo.scale = Vector2.ONE * halo_mult
+	_core.color = preset.get("core_color", Color.WHITE)
+	_outer_halo.color = preset.get("halo_color", Color.WHITE)
 
-	var energy_tint: float = lerpf(0.72, 1.0, energy_ratio)
-	var instability_tint: Color = Color(
-		lerpf(1.0, 1.15, instability_ratio),
-		lerpf(1.0, 0.92, instability_ratio),
-		lerpf(1.0, 1.25, instability_ratio),
-		1.0
-	)
-	_core.color = _base_core_color * Color(energy_tint, energy_tint, energy_tint, 1.0) * instability_tint
-	_outer_halo.color = _base_halo_color * Color(1.0, 1.0, 1.0, lerpf(0.35, 0.7, growth_blend))
+	_cumulus_puff.visible = preset.get("show_cumulus_puff", false)
+	if _cumulus_puff.visible:
+		_cumulus_puff.modulate.a = lerpf(0.45, 0.75, resource_blend)
 
-	_mist.amount = maxi(1, int(lerpf(10.0, 36.0, growth_blend)))
+	_thunder_glow.visible = preset.get("show_thunder_glow", false)
+	if _thunder_glow.visible:
+		var pulse: float = 0.65 + sin(_pulse_time * 8.0) * 0.2
+		_thunder_glow.modulate = Color(0.75, 0.7, 1.0, pulse * resource_blend)
 
-	if instability_ratio > 0.15:
+	var mist_mult: float = preset.get("mist_mult", 1.0)
+	_mist.amount = maxi(1, int(lerpf(10.0, 40.0, resource_blend) * mist_mult))
+
+	if instability_ratio > 0.12:
 		_updraft.visible = true
-		_updraft.amount = maxi(1, int(lerpf(6.0, 20.0, instability_ratio)))
+		_updraft.amount = maxi(1, int(lerpf(8.0, 24.0, instability_ratio)))
 	else:
 		_updraft.visible = false

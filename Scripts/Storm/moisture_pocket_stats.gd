@@ -1,9 +1,17 @@
 class_name MoisturePocketStats
 extends Node
 
-## Atmospheric resources for the player moisture pocket (Prototype Phase 2).
+## Atmospheric resources and evolution stages (Prototype Phase 4).
 
-enum GrowthStage { MOISTURE_POCKET, UNSTABLE_AIR, UPDRAFT_FORMING }
+const EvoData = preload("res://Systems/Data/evolution_stage_data.gd")
+
+enum GrowthStage {
+	MOISTURE_POCKET,
+	UNSTABLE_AIR,
+	UPDRAFT_FORMING,
+	CUMULUS_CLOUD,
+	DEVELOPING_THUNDERSTORM,
+}
 
 signal stats_changed(
 	humidity: float,
@@ -12,12 +20,14 @@ signal stats_changed(
 	instability: float
 )
 signal growth_stage_changed(stage: GrowthStage)
+signal evolution_progress_changed(progress: float, next_stage_label: String)
 
 var humidity: float = 0.0
 var heat_energy: float = 0.0
 var storm_energy: float = 0.0
 var instability: float = 0.0
 var active_biome_label: String = ""
+var evolution_progress: float = 0.0
 
 var _zone_humidity_rate: float = 0.0
 var _zone_heat_rate: float = 0.0
@@ -90,6 +100,58 @@ func is_in_any_zone() -> bool:
 	return _humidity_zone_count > 0 or _heat_zone_count > 0
 
 
+func get_energy_ratio() -> float:
+	return storm_energy / PrototypeBalance.MAX_STORM_ENERGY
+
+
+func get_instability_ratio() -> float:
+	return instability / PrototypeBalance.MAX_INSTABILITY
+
+
+func get_growth_stage() -> GrowthStage:
+	return _growth_stage
+
+
+func get_growth_stage_label() -> String:
+	return EvoData.get_stage_label(_to_data_stage(_growth_stage))
+
+
+func get_next_stage_label() -> String:
+	return EvoData.get_next_stage_label(_to_data_stage(_growth_stage))
+
+
+func get_evolution_progress() -> float:
+	return evolution_progress
+
+
+func _to_data_stage(stage: GrowthStage) -> int:
+	match stage:
+		GrowthStage.UNSTABLE_AIR:
+			return EvoData.Stage.UNSTABLE_AIR
+		GrowthStage.UPDRAFT_FORMING:
+			return EvoData.Stage.WARM_UPDRAFT
+		GrowthStage.CUMULUS_CLOUD:
+			return EvoData.Stage.CUMULUS_CLOUD
+		GrowthStage.DEVELOPING_THUNDERSTORM:
+			return EvoData.Stage.DEVELOPING_THUNDERSTORM
+		_:
+			return EvoData.Stage.MOISTURE_POCKET
+
+
+func _from_data_stage(stage: int) -> GrowthStage:
+	match stage:
+		EvoData.Stage.UNSTABLE_AIR:
+			return GrowthStage.UNSTABLE_AIR
+		EvoData.Stage.WARM_UPDRAFT:
+			return GrowthStage.UPDRAFT_FORMING
+		EvoData.Stage.CUMULUS_CLOUD:
+			return GrowthStage.CUMULUS_CLOUD
+		EvoData.Stage.DEVELOPING_THUNDERSTORM:
+			return GrowthStage.DEVELOPING_THUNDERSTORM
+		_:
+			return GrowthStage.MOISTURE_POCKET
+
+
 func _refresh_active_biome_label() -> void:
 	if _active_biomes.is_empty():
 		active_biome_label = ""
@@ -107,33 +169,15 @@ func add_heat(amount: float) -> void:
 	heat_energy = clampf(heat_energy + amount, 0.0, PrototypeBalance.MAX_HEAT)
 
 
-func get_energy_ratio() -> float:
-	return storm_energy / PrototypeBalance.MAX_STORM_ENERGY
-
-
-func get_instability_ratio() -> float:
-	return instability / PrototypeBalance.MAX_INSTABILITY
-
-
-func get_growth_stage() -> GrowthStage:
-	return _growth_stage
-
-
-func get_growth_stage_label() -> String:
-	match _growth_stage:
-		GrowthStage.MOISTURE_POCKET:
-			return "Moisture Pocket"
-		GrowthStage.UNSTABLE_AIR:
-			return "Unstable Air"
-		GrowthStage.UPDRAFT_FORMING:
-			return "Warm Updraft Forming"
-		_:
-			return "Moisture Pocket"
-
-
 func _apply_zone_collection(delta: float) -> void:
+	var humidity_mult: float = 1.0
+	if _growth_stage == GrowthStage.CUMULUS_CLOUD:
+		humidity_mult = PrototypeBalance.CUMULUS_HUMIDITY_MULT
+	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
+		humidity_mult = PrototypeBalance.CUMULUS_HUMIDITY_MULT * 1.05
+
 	if _zone_humidity_rate > 0.0:
-		add_humidity(_zone_humidity_rate * delta)
+		add_humidity(_zone_humidity_rate * humidity_mult * delta)
 	if _zone_heat_rate > 0.0:
 		add_heat(_zone_heat_rate * delta)
 
@@ -148,7 +192,6 @@ func _apply_passive_decay(delta: float) -> void:
 			instability - PrototypeBalance.INSTABILITY_DECAY_RATE * 1.5 * delta,
 			0.0
 		)
-	# Energy dissipates unless the pocket is actively synthesizing in overlapping zones.
 	if (not is_in_humidity_zone() or not is_in_heat_zone()) and storm_energy > 0.0:
 		storm_energy = maxf(
 			storm_energy - PrototypeBalance.STORM_ENERGY_DECAY_RATE * delta,
@@ -162,10 +205,15 @@ func _update_instability(delta: float) -> void:
 
 	var synergy: float = minf(humidity, heat_energy) / PrototypeBalance.MAX_HUMIDITY
 	var imbalance: float = absf(humidity - heat_energy) / PrototypeBalance.MAX_HUMIDITY
+	var inst_mult: float = 1.0
+	if _growth_stage == GrowthStage.UNSTABLE_AIR:
+		inst_mult = PrototypeBalance.UNSTABLE_INSTABILITY_MULT
+	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
+		inst_mult = PrototypeBalance.THUNDERSTORM_INSTABILITY_MULT
 
 	if synergy >= PrototypeBalance.INSTABILITY_SYNERGY_MIN:
 		instability += (
-			synergy * PrototypeBalance.INSTABILITY_SYNERGY_RATE
+			synergy * PrototypeBalance.INSTABILITY_SYNERGY_RATE * inst_mult
 			- imbalance * PrototypeBalance.INSTABILITY_IMBALANCE_PENALTY
 		) * delta
 
@@ -182,32 +230,41 @@ func _update_instability(delta: float) -> void:
 
 
 func _update_storm_energy(delta: float) -> void:
-	# Synthesis only while overlapping both a humidity source and a heat source.
 	if not is_in_humidity_zone() or not is_in_heat_zone():
 		return
 	if humidity <= 1.0 or heat_energy <= 1.0:
 		return
 
+	var energy_mult: float = 1.0
+	if _growth_stage == GrowthStage.UPDRAFT_FORMING:
+		energy_mult = PrototypeBalance.UPDRAFT_ENERGY_MULT
+	elif _growth_stage == GrowthStage.CUMULUS_CLOUD:
+		energy_mult = PrototypeBalance.CUMULUS_ENERGY_MULT
+	elif _growth_stage == GrowthStage.DEVELOPING_THUNDERSTORM:
+		energy_mult = PrototypeBalance.THUNDERSTORM_ENERGY_MULT
+
 	var blend: float = minf(humidity, heat_energy) / PrototypeBalance.MAX_HUMIDITY
 	var instability_boost: float = 1.0 + get_instability_ratio() * PrototypeBalance.ENERGY_INSTABILITY_BOOST
-	storm_energy += PrototypeBalance.ENERGY_SYNTHESIS_RATE * blend * instability_boost * delta
+	storm_energy += (
+		PrototypeBalance.ENERGY_SYNTHESIS_RATE * blend * instability_boost * energy_mult * delta
+	)
 	storm_energy = clampf(storm_energy, 0.0, PrototypeBalance.MAX_STORM_ENERGY)
 
 
 func _refresh_growth_stage() -> void:
-	var new_stage: GrowthStage = GrowthStage.MOISTURE_POCKET
-
-	if (
-		storm_energy >= PrototypeBalance.UPDRAFT_ENERGY
-		and instability >= PrototypeBalance.UPDRAFT_INSTABILITY
-	):
-		new_stage = GrowthStage.UPDRAFT_FORMING
-	elif instability >= PrototypeBalance.UNSTABLE_AIR_INSTABILITY:
-		new_stage = GrowthStage.UNSTABLE_AIR
+	var data_stage: int = EvoData.evaluate_stage(storm_energy, instability, humidity)
+	var new_stage: GrowthStage = _from_data_stage(data_stage)
+	var new_progress: float = EvoData.get_progress_toward_next(
+		data_stage, storm_energy, instability, humidity
+	)
+	var next_label: String = EvoData.get_next_stage_label(data_stage)
 
 	if new_stage != _growth_stage:
 		_growth_stage = new_stage
 		growth_stage_changed.emit(_growth_stage)
+
+	evolution_progress = new_progress
+	evolution_progress_changed.emit(evolution_progress, next_label)
 
 
 func _emit_stats() -> void:

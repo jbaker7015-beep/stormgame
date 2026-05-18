@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 PrototypeBalance="*res://Systems/Config/prototype_balance.gd"
 GameManager="*res://Scripts/Managers/game_manager.gd"
 WeatherManager="*res://Scripts/Managers/weather_manager.gd"
+AIManager="*res://Scripts/Managers/ai_manager.gd"
+StormAudioManager="*res://Scenes/Systems/storm_audio.tscn"
 
 [display]
 

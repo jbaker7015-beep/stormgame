@@ -3,8 +3,9 @@ extends Node2D
 ## Drawn rain streaks and wind lines — high contrast, always visible (Phase 3).
 
 const MAX_DROPS: int = 90
-const DROP_ZONE_RADIUS: float = 160.0
+const DEFAULT_DROP_ZONE_RADIUS: float = 160.0
 
+var _drop_zone_radius: float = DEFAULT_DROP_ZONE_RADIUS
 var rain_intensity: float = 0.0
 var wind_direction: Vector2 = Vector2(1.0, 0.0)
 var wind_intensity: float = 0.0
@@ -24,9 +25,13 @@ func _init_drops() -> void:
 		_drops.append(_make_drop())
 
 
+func set_drop_zone_radius(radius: float) -> void:
+	_drop_zone_radius = maxf(radius, 40.0)
+
+
 func _make_drop() -> Dictionary:
 	var angle: float = randf() * TAU
-	var dist: float = randf() * DROP_ZONE_RADIUS
+	var dist: float = randf() * _drop_zone_radius
 	return {
 		"offset": Vector2(cos(angle), sin(angle)) * dist,
 		"speed": randf_range(140.0, 260.0),
@@ -61,7 +66,7 @@ func _animate_rain(delta: float) -> void:
 	for i in active_count:
 		var drop: Dictionary = _drops[i]
 		drop["offset"] += fall_dir * drop["speed"] * delta
-		if drop["offset"].length() > DROP_ZONE_RADIUS:
+		if drop["offset"].length() > _drop_zone_radius:
 			_drops[i] = _make_drop()
 
 	queue_redraw()

@@ -4,9 +4,11 @@ extends CharacterBody2D
 ## Smooth top-down movement for the moisture pocket (WASD / arrow keys).
 
 @onready var _stats: Node = $Stats
+@onready var _weather: StormWeatherEffects = $StormWeather
 
 
 func _ready() -> void:
+	add_to_group("player_storm")
 	GameManager.register_player(self)
 
 
@@ -36,10 +38,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _get_wind_vector() -> Vector2:
-	var weather_nodes := get_tree().get_nodes_in_group("storm_weather")
-	for node in weather_nodes:
-		if node.has_method("get_wind_vector"):
-			return node.get_wind_vector()
+	if _weather != null:
+		return _weather.get_wind_vector()
 	return Vector2.ZERO
 
 

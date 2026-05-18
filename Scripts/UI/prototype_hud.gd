@@ -1,13 +1,16 @@
 extends Control
 
-## HUD for Prototype Phase 2 — resources, instability, and growth stage.
+## HUD for Prototype Phase 4 — resources, evolution stage, and progress.
 
 @onready var _humidity_bar: ProgressBar = %HumidityBar
 @onready var _heat_bar: ProgressBar = %HeatBar
 @onready var _energy_bar: ProgressBar = %EnergyBar
 @onready var _instability_bar: ProgressBar = %InstabilityBar
 @onready var _stage_label: Label = %StageLabel
+@onready var _evolution_label: Label = %EvolutionLabel
+@onready var _evolution_bar: ProgressBar = %EvolutionBar
 @onready var _biome_label: Label = %BiomeLabel
+@onready var _rivals_label: Label = %RivalsLabel
 @onready var _hint_label: Label = %HintLabel
 
 
@@ -16,6 +19,9 @@ func _ready() -> void:
 	GameManager.player_registered.connect(_on_player_registered)
 	if GameManager.player != null:
 		_on_player_registered(GameManager.player)
+	AIManager.ai_storm_registered.connect(_on_ai_ecosystem_changed)
+	AIManager.ai_storm_unregistered.connect(_on_ai_ecosystem_changed)
+	_update_rivals_label()
 
 
 func _configure_bars() -> void:
@@ -23,6 +29,7 @@ func _configure_bars() -> void:
 	_heat_bar.max_value = PrototypeBalance.MAX_HEAT
 	_energy_bar.max_value = PrototypeBalance.MAX_STORM_ENERGY
 	_instability_bar.max_value = PrototypeBalance.MAX_INSTABILITY
+	_evolution_bar.max_value = 100.0
 
 
 func _on_player_registered(player: Node2D) -> void:
@@ -31,9 +38,10 @@ func _on_player_registered(player: Node2D) -> void:
 		return
 	stats.stats_changed.connect(_on_stats_changed)
 	stats.growth_stage_changed.connect(_on_growth_stage_changed)
+	stats.evolution_progress_changed.connect(_on_evolution_progress_changed)
 	_on_stats_changed(stats.humidity, stats.heat_energy, stats.storm_energy, stats.instability)
-	_stage_label.text = "Stage: %s" % stats.get_growth_stage_label()
-	_apply_stage_color(stats.get_growth_stage())
+	_on_growth_stage_changed(stats.get_growth_stage())
+	_on_evolution_progress_changed(stats.get_evolution_progress(), stats.get_next_stage_label())
 
 
 func _on_stats_changed(humidity: float, heat: float, energy: float, instability: float) -> void:
@@ -52,14 +60,39 @@ func _on_growth_stage_changed(stage: int) -> void:
 	_apply_stage_color(stage)
 
 
+func _on_evolution_progress_changed(progress: float, next_label: String) -> void:
+	_evolution_bar.value = progress * 100.0
+	if progress >= 0.999 and next_label.contains("future"):
+		_evolution_label.text = "Evolution: Developing Thunderstorm (peak)"
+	else:
+		_evolution_label.text = "Toward %s: %d%%" % [next_label, int(progress * 100.0)]
+
+
 func _apply_stage_color(stage: int) -> void:
 	match stage:
+		MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
+			_stage_label.modulate = Color(0.82, 0.78, 1.0)
+		MoisturePocketStats.GrowthStage.CUMULUS_CLOUD:
+			_stage_label.modulate = Color(0.92, 0.96, 1.0)
 		MoisturePocketStats.GrowthStage.UPDRAFT_FORMING:
 			_stage_label.modulate = Color(1.0, 0.88, 0.55)
 		MoisturePocketStats.GrowthStage.UNSTABLE_AIR:
 			_stage_label.modulate = Color(0.85, 0.75, 1.0)
 		_:
 			_stage_label.modulate = Color(0.9, 0.95, 1.0)
+
+
+func _on_ai_ecosystem_changed(_ai_storm: Node2D) -> void:
+	_update_rivals_label()
+
+
+func _update_rivals_label() -> void:
+	var count: int = AIManager.get_ai_count()
+	if count <= 0:
+		_rivals_label.text = "Rivals: spawning…"
+		return
+	var lead: String = AIManager.get_strongest_ai_stage_label()
+	_rivals_label.text = "Rivals: %d AI storms (lead: %s)" % [count, lead]
 
 
 func _update_hint(humidity: float, heat: float, energy: float, instability: float) -> void:
@@ -71,8 +104,15 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 
 	var in_humid: bool = stats != null and stats.is_in_humidity_zone()
 	var in_heat: bool = stats != null and stats.is_in_heat_zone()
+	var stage: int = stats.get_growth_stage() if stats != null else 0
 
-	if energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
+	if stage == MoisturePocketStats.GrowthStage.DEVELOPING_THUNDERSTORM:
+		_hint_label.text = "Developing Thunderstorm — peak stage! Heavy rain, wind, thunder audio."
+	elif stage == MoisturePocketStats.GrowthStage.CUMULUS_CLOUD:
+		_hint_label.text = "Cumulus Cloud — push energy, instability, and humidity to evolve further."
+	elif stage == MoisturePocketStats.GrowthStage.UPDRAFT_FORMING:
+		_hint_label.text = "Updraft active — push energy and humidity to reach Cumulus Cloud."
+	elif energy >= PrototypeBalance.UPDRAFT_ENERGY and instability >= PrototypeBalance.UPDRAFT_INSTABILITY:
 		_hint_label.text = "Severe storm — rain, wind, and lightning active!"
 	elif (
 		instability >= PrototypeBalance.LIGHTNING_MIN_INSTABILITY
@@ -83,14 +123,14 @@ func _update_hint(humidity: float, heat: float, energy: float, instability: floa
 		humidity >= PrototypeBalance.RAIN_MIN_HUMIDITY
 		or instability >= PrototypeBalance.RAIN_MIN_INSTABILITY
 	):
-		_hint_label.text = "Rain active — white streaks + blue screen tint. Release WASD to feel wind."
+		_hint_label.text = "Rain active — grow evolution progress to advance stages."
 	elif energy >= 8.0 or instability >= 15.0:
-		_hint_label.text = "Storm building — wind will push you when energy or instability rise."
+		_hint_label.text = "Storm building — fill the evolution bar to advance."
 	elif in_humid and in_heat:
 		_hint_label.text = "Synthesizing energy — stay in overlapping humid + heat zones."
 	elif in_humid or in_heat:
 		_hint_label.text = "Find a biome with the other resource to grow storm energy."
 	elif humidity <= 1.0 and heat <= 1.0:
-		_hint_label.text = "Enter colored biomes to collect humidity and heat."
+		_hint_label.text = "Enter colored biomes — AI rivals seek the same resources."
 	else:
 		_hint_label.text = "Leave biomes — resources decay. Re-enter to grow again."

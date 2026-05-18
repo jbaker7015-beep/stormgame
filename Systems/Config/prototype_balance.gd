@@ -29,10 +29,20 @@ const INSTABILITY_HIGH_RESOURCE_THRESHOLD: float = 35.0
 const INSTABILITY_DECAY_RATE: float = 5.0
 const INSTABILITY_SYNERGY_MIN: float = 0.12
 
-# Growth stage thresholds (aligned with early StormEvolutionTree stages)
+# Growth stage thresholds (aligned with StormEvolutionTree.md)
 const UNSTABLE_AIR_INSTABILITY: float = 28.0
 const UPDRAFT_ENERGY: float = 45.0
 const UPDRAFT_INSTABILITY: float = 40.0
+const CUMULUS_ENERGY: float = 58.0
+const CUMULUS_INSTABILITY: float = 48.0
+const CUMULUS_HUMIDITY: float = 35.0
+const THUNDERSTORM_ENERGY: float = 75.0
+const THUNDERSTORM_INSTABILITY: float = 65.0
+const THUNDERSTORM_HUMIDITY: float = 42.0
+
+# Stage transition feedback
+const EVOLUTION_PULSE_DURATION: float = 0.5
+const EVOLUTION_PULSE_SCALE: float = 2.4
 
 # Slow decay when not collecting from biome zones
 const HUMIDITY_DECAY_RATE: float = 4.0
@@ -71,3 +81,25 @@ const LIGHTNING_COOLDOWN_MAX: float = 3.2
 const LIGHTNING_COOLDOWN_MIN: float = 0.9
 const LIGHTNING_FLASH_DURATION: float = 0.18
 const LIGHTNING_FLASH_ALPHA: float = 0.55
+
+# --- Prototype Phase 4: evolution bonuses (per stage) ---
+const UNSTABLE_INSTABILITY_MULT: float = 1.08
+const UPDRAFT_ENERGY_MULT: float = 1.12
+const CUMULUS_HUMIDITY_MULT: float = 1.22
+const CUMULUS_ENERGY_MULT: float = 1.15
+const THUNDERSTORM_ENERGY_MULT: float = 1.2
+const THUNDERSTORM_INSTABILITY_MULT: float = 1.1
+
+# --- Prototype Phase 5: AI ecosystem ---
+const STORM_PLAYER_COLLISION_LAYER: int = 1
+const STORM_AI_COLLISION_LAYER: int = 2
+const STORM_BODY_COLLISION_MASK: int = 3
+
+const AI_MOVE_SPEED: float = 250.0
+const AI_THINK_INTERVAL: float = 0.45
+const AI_PLAYER_COMPETE_RADIUS: float = 50.0
+const AI_PLAYER_COMPETE_PENALTY: float = 28.0
+const AI_STORM_COMPETE_PENALTY: float = 14.0
+const AI_WEATHER_DROP_RADIUS: float = 130.0
+const AI_WEATHER_RAIN_MULT: float = 0.92
+const AI_WEATHER_WIND_MULT: float = 0.88
